@@ -24,7 +24,11 @@
 
 #include <QApplication>
 #include <QDesktopWidget>
+#include <QFont>
 #include <QHBoxLayout>
+#include <QList>
+#include <QPrintDialog>
+#include <QPrinter>
 #include <QPushButton>
 #include <QRect>
 #include <QVBoxLayout>
@@ -69,5 +73,59 @@ MainWindow::MainWindow()
 
 void MainWindow::onClicked()
 {
-    //...
+    QPrinter printer;
+    QPrintDialog printDialog(&printer);
+    if (printDialog.exec() == QDialog::Accepted) {
+
+        // Ensure a landscape page
+        printer.setPageOrientation(QPageLayout::Landscape);
+
+        // Get the page size and divide it by three
+        QRectF pageRectF = printer.pageRect(QPrinter::Point);
+        pageRectF.setHeight(pageRectF.height() / 3);
+
+        // Begin printing
+        QPainter painter;
+        painter.begin(&printer);
+
+        // Draw each text block
+        foreach (QTextEdit *textEdit, QList<QTextEdit*>({mStyle, mColor, mSize})) {
+
+            // Grab the text value
+            QString value = textEdit->toPlainText();
+            drawTextBlock(painter,  pageRectF, value);
+
+            // Move the block down
+            pageRectF.translate(0, pageRectF.height());
+        }
+
+        // Finish drawing
+        painter.end();
+    }
+}
+
+void MainWindow::drawTextBlock(QPainter &painter, QRectF &rect, QString &text)
+{
+    // Create the font
+    QFont font;
+    font.setBold(true);
+    font.setFamily(tr("Corbel"));
+
+    // Calculate the optimal size
+    for (int fontSize = 400; fontSize > 0; fontSize -= 2) {
+
+        // Try the font size
+        font.setPointSize(fontSize);
+        painter.setFont(font);
+        QRectF requiredRect = painter.boundingRect(rect, 0, text);
+
+        // Determine if the text fits
+        if (requiredRect.width() <= rect.width() &&
+                requiredRect.height() <= rect.height()) {
+            break;
+        }
+    }
+
+    // Draw the text
+    painter.drawText(rect, 0, text);
 }

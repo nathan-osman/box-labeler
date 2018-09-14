@@ -26,6 +26,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QPainter>
+#include <QRectF>
 #include <QTextEdit>
 
 class MainWindow : public QMainWindow
@@ -41,6 +43,8 @@ private slots:
     void onClicked();
 
 private:
+
+    void drawTextBlock(QPainter &painter, QRectF &rect, QString &text);
 
     QTextEdit *mStyle;
     QTextEdit *mColor;
