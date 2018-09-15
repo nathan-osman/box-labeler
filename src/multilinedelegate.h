@@ -22,42 +22,28 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef MULTILINEDELEGATE_H
+#define MULTILINEDELEGATE_H
 
-#include <QFont>
-#include <QMainWindow>
-#include <QPainter>
-#include <QRectF>
-#include <QTableWidget>
-#include <QWidget>
+#include <QItemDelegate>
 
-class MainWindow : public QMainWindow
+class MultilineDelegate : public QItemDelegate
 {
     Q_OBJECT
 
 public:
 
-    MainWindow();
+    explicit MultilineDelegate(QObject *parent);
 
-private slots:
+    virtual QWidget *createEditor(QWidget *parent,
+                                  const QStyleOptionViewItem &option,
+                                  const QModelIndex &index) const;
 
-    void onCellChanged(int row);
+    virtual void setEditorData(QWidget *editor, const QModelIndex &index) const;
 
-    void onPrintClicked();
-    void onFontClicked();
-    void onAddClicked();
-    void onInsertClicked();
-    void onDeleteClicked();
-
-private:
-
-    QWidget *createHLine();
-    void fitText(QPainter &painter, const QRectF &rect, QString &text);
-
-    QTableWidget *mTableWidget;
-
-    QFont mFont;
+    virtual void setModelData(QWidget *editor,
+                              QAbstractItemModel *model,
+                              const QModelIndex &index) const;
 };
 
-#endif // MAINWINDOW_H
+#endif // MULTILINEDELEGATE_H

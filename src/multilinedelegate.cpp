@@ -22,42 +22,33 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#include <QTextEdit>
 
-#include <QFont>
-#include <QMainWindow>
-#include <QPainter>
-#include <QRectF>
-#include <QTableWidget>
-#include <QWidget>
+#include "multilinedelegate.h"
 
-class MainWindow : public QMainWindow
+MultilineDelegate::MultilineDelegate(QObject *parent)
+    : QItemDelegate(parent)
 {
-    Q_OBJECT
+}
 
-public:
+QWidget *MultilineDelegate::createEditor(QWidget *parent,
+                                         const QStyleOptionViewItem &,
+                                         const QModelIndex &) const
+{
+    QTextEdit *editor = new QTextEdit(parent);
+    editor->setAcceptRichText(false);
+    editor->setTabChangesFocus(true);
+    return editor;
+}
 
-    MainWindow();
+void MultilineDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
+{
+    qobject_cast<QTextEdit*>(editor)->setPlainText(index.data().toString());
+}
 
-private slots:
-
-    void onCellChanged(int row);
-
-    void onPrintClicked();
-    void onFontClicked();
-    void onAddClicked();
-    void onInsertClicked();
-    void onDeleteClicked();
-
-private:
-
-    QWidget *createHLine();
-    void fitText(QPainter &painter, const QRectF &rect, QString &text);
-
-    QTableWidget *mTableWidget;
-
-    QFont mFont;
-};
-
-#endif // MAINWINDOW_H
+void MultilineDelegate::setModelData(QWidget *editor,
+                                     QAbstractItemModel *model,
+                                     const QModelIndex &index) const
+{
+    model->setData(index, qobject_cast<QTextEdit*>(editor)->toPlainText());
+}

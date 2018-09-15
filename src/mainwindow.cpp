@@ -38,6 +38,7 @@
 #include <QVBoxLayout>
 
 #include "mainwindow.h"
+#include "multilinedelegate.h"
 
 MainWindow::MainWindow()
 {
@@ -51,21 +52,25 @@ MainWindow::MainWindow()
 
     // Initialize the table widget
     mTableWidget = new QTableWidget;
+    mTableWidget->setItemDelegate(new MultilineDelegate(this));
     mTableWidget->setColumnCount(3);
     mTableWidget->setHorizontalHeaderLabels(
                 QStringList() << tr("Style") << tr("Color") << tr("Sizes"));
     mTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    connect(mTableWidget, &QTableWidget::cellChanged, this, &MainWindow::onCellChanged);
 
     // Initialize the default font
     mFont.setBold(true);
-    mFont.setFamily("Corbel");
+    mFont.setFamily("Calibri");
 
     // Create the print button
     QPushButton *printButton = new QPushButton(tr("&Print..."));
+    printButton->setIcon(QIcon(":/img/print.png"));
     connect(printButton, &QPushButton::clicked, this, &MainWindow::onPrintClicked);
 
     // Create the font button
     QPushButton *fontButton = new QPushButton(tr("&Font..."));
+    fontButton->setIcon(QIcon(":/img/font.png"));
     connect(fontButton, &QPushButton::clicked, this, &MainWindow::onFontClicked);
 
     // Create the add button
@@ -106,7 +111,8 @@ MainWindow::MainWindow()
     widget->setLayout(vboxLayout);
     setCentralWidget(widget);
 
-    // Set the window title and geometry
+    // Setup the window
+    setStyleSheet("QPushButton { padding: 8px 16px; }");
     setWindowIcon(QIcon(":/img/box-labeler.png"));
     setWindowTitle(tr("Box Labeler"));
     resize(640, 480);
@@ -114,6 +120,11 @@ MainWindow::MainWindow()
 
     // Create one new row to begin with
     onAddClicked();
+}
+
+void MainWindow::onCellChanged(int row)
+{
+    mTableWidget->resizeRowToContents(row);
 }
 
 void MainWindow::onPrintClicked()
@@ -137,12 +148,15 @@ void MainWindow::onPrintClicked()
             QRectF rect = printer.pageRect();
             rect.setHeight(rect.height() / 3);
 
-            // Draw the three columns
+            // Draw the three blocks of text
             for (int j = 0; j < 3; ++j) {
 
-                // Grab the text value
-                QString value = mTableWidget->item(i, j)->text();
-                fitText(painter,  rect, value);
+                // Draw the text value
+                QTableWidgetItem *item = mTableWidget->item(i, j);
+                if (item) {
+                    QString value = item->text();
+                    fitText(painter, rect, value);
+                }
 
                 // Move the rect down by its own height
                 rect.translate(0, rect.height());

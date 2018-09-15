@@ -2,6 +2,8 @@ set(SRC
     main.cpp
     mainwindow.h
     mainwindow.cpp
+    multilinedelegate.h
+    multilinedelegate.cpp
     resource.qrc
     resource.rc
 )
