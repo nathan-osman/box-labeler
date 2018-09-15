@@ -5,5 +5,6 @@ find_package(Qt5PrintSupport 5.4 REQUIRED)
 find_package(Qt5Widgets 5.4 REQUIRED)
 
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
 
 add_subdirectory(src)

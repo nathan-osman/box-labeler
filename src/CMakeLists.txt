@@ -2,6 +2,8 @@ set(SRC
     main.cpp
     mainwindow.h
     mainwindow.cpp
+    resource.qrc
+    resource.rc
 )
 
 add_executable(box-labeler WIN32 ${SRC})

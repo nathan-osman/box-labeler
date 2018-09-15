@@ -1,0 +1,27 @@
+#include <windows.h>
+
+APP_ICON ICON DISCARDABLE "box-labeler.ico"
+
+VS_VERSION_INFO VERSIONINFO
+    FILEVERSION    0, 1, 0, 0
+    PRODUCTVERSION 0, 1, 0, 0
+{
+    BLOCK "StringFileInfo"
+    {
+        BLOCK "040904b0"
+        {
+            VALUE "CompanyName",      "Nathan Osman\0"
+            VALUE "FileDescription",  "Box label printer\0"
+            VALUE "FileVersion",      "0.1.0\0"
+            VALUE "InternalName",     "Box Labeler\0"
+            VALUE "LegalCopyright",   "Copyright (c) 2018 Nathan Osman\0"
+            VALUE "OriginalFilename", "box-labeler.exe\0"
+            VALUE "ProductName",      "Box Labeler\0"
+            VALUE "ProductVersion",   "0.1.0\0"
+        }
+    }
+    BLOCK "VarFileInfo"
+    {
+        VALUE "Translation", 0x409, 1252
+    }
+}

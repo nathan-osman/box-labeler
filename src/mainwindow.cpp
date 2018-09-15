@@ -25,60 +25,95 @@
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QFontDialog>
+#include <QFrame>
 #include <QHBoxLayout>
-#include <QList>
+#include <QHeaderView>
+#include <QIcon>
+#include <QLabel>
 #include <QPrintDialog>
 #include <QPrinter>
 #include <QPushButton>
 #include <QRect>
+#include <QTableWidgetItem>
 #include <QVBoxLayout>
-#include <QWidget>
 
 #include "mainwindow.h"
 
 MainWindow::MainWindow()
 {
+    // Create the description label
+    QLabel *label = new QLabel(tr(
+        "Use the table below to create box labels.\n\n"
+        "Enter the information for each label on a separate row. "
+        "Use the Add / Insert buttons to add more rows as needed."
+    ));
+    label->setWordWrap(true);
+
+    // Initialize the table widget
+    mTableWidget = new QTableWidget;
+    mTableWidget->setColumnCount(3);
+    mTableWidget->setHorizontalHeaderLabels(
+                QStringList() << tr("Style") << tr("Color") << tr("Sizes"));
+    mTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
     // Initialize the default font
     mFont.setBold(true);
     mFont.setFamily("Corbel");
 
-    // Create the text inputs and layout
-    QVBoxLayout *textLayout = new QVBoxLayout;
-    textLayout->addWidget(mStyle = new QTextEdit);
-    textLayout->addWidget(mColor = new QTextEdit);
-    textLayout->addWidget(mSize = new QTextEdit);
-    textLayout->addStretch(0);
-
     // Create the print button
-    QPushButton *printButton = new QPushButton(tr("Print"));
+    QPushButton *printButton = new QPushButton(tr("&Print..."));
     connect(printButton, &QPushButton::clicked, this, &MainWindow::onPrintClicked);
 
     // Create the font button
-    QPushButton *fontButton = new QPushButton(tr("Font"));
+    QPushButton *fontButton = new QPushButton(tr("&Font..."));
     connect(fontButton, &QPushButton::clicked, this, &MainWindow::onFontClicked);
 
+    // Create the add button
+    QPushButton *addButton = new QPushButton(tr("&Add Row"));
+    connect(addButton, &QPushButton::clicked, this, &MainWindow::onAddClicked);
+
+    // Create the insert button
+    QPushButton *insertButton = new QPushButton(tr("&Insert Row"));
+    insertButton->setToolTip(tr("Insert a row before the currently selected one"));
+    connect(insertButton, &QPushButton::clicked, this, &MainWindow::onInsertClicked);
+
+    // Create the delete button
+    QPushButton *deleteButton = new QPushButton(tr("&Delete Row"));
+    connect(deleteButton, &QPushButton::clicked, this, &MainWindow::onDeleteClicked);
+
+    // Create the layout for the buttons
     QVBoxLayout *buttonLayout = new QVBoxLayout;
     buttonLayout->addWidget(printButton);
     buttonLayout->addWidget(fontButton);
+    buttonLayout->addWidget(createHLine());
+    buttonLayout->addWidget(addButton);
+    buttonLayout->addWidget(insertButton);
+    buttonLayout->addWidget(deleteButton);
     buttonLayout->addStretch(0);
 
-    // Create the central widget
-    QWidget *widget = new QWidget;
+    // Create the layout that separates the table and buttons
     QHBoxLayout *hboxLayout = new QHBoxLayout;
-    hboxLayout->addLayout(textLayout);
+    hboxLayout->addWidget(mTableWidget);
     hboxLayout->addLayout(buttonLayout);
-    widget->setLayout(hboxLayout);
+
+    // Create the central widget and layout
+    QWidget *widget = new QWidget;
+    QVBoxLayout *vboxLayout = new QVBoxLayout;
+    vboxLayout->setSpacing(10);
+    vboxLayout->addWidget(label);
+    vboxLayout->addWidget(createHLine());
+    vboxLayout->addLayout(hboxLayout);
+    widget->setLayout(vboxLayout);
     setCentralWidget(widget);
 
     // Set the window title and geometry
+    setWindowIcon(QIcon(":/img/box-labeler.png"));
     setWindowTitle(tr("Box Labeler"));
     resize(640, 480);
     move(QApplication::desktop()->availableGeometry().center() - rect().center());
 
-    // Initialize the text inputs
-    mStyle->setAcceptRichText(false);
-    mColor->setAcceptRichText(false);
-    mSize->setAcceptRichText(false);
+    // Create one new row to begin with
+    onAddClicked();
 }
 
 void MainWindow::onPrintClicked()
@@ -91,23 +126,32 @@ void MainWindow::onPrintClicked()
     QPrintDialog printDialog(&printer);
     if (printDialog.exec() == QDialog::Accepted) {
 
-        // Create a rect one-third the page height
-        QRectF rect = printer.pageRect();
-        rect.setHeight(rect.height() / 3);
-
-        // Prepare to draw the text
+        // Prepare to render the document
         QPainter painter;
         painter.begin(&printer);
 
-        // Draw each block of text
-        foreach (QTextEdit *textEdit, QList<QTextEdit*>({mStyle, mColor, mSize})) {
+        // Draw each page
+        for (int i = 0; i < mTableWidget->rowCount(); ++i) {
 
-            // Grab the text value
-            QString value = textEdit->toPlainText();
-            fitText(painter,  rect, value);
+            // Create a rect one-third the page height
+            QRectF rect = printer.pageRect();
+            rect.setHeight(rect.height() / 3);
 
-            // Move the rect down by its own height
-            rect.translate(0, rect.height());
+            // Draw the three columns
+            for (int j = 0; j < 3; ++j) {
+
+                // Grab the text value
+                QString value = mTableWidget->item(i, j)->text();
+                fitText(painter,  rect, value);
+
+                // Move the rect down by its own height
+                rect.translate(0, rect.height());
+            }
+
+            // Advance to the next page if necessary
+            if (i + 1 < mTableWidget->rowCount()) {
+                printer.newPage();
+            }
         }
 
         painter.end();
@@ -119,11 +163,35 @@ void MainWindow::onFontClicked()
     mFont = QFontDialog::getFont(nullptr, mFont);
 }
 
+void MainWindow::onAddClicked()
+{
+    mTableWidget->setRowCount(mTableWidget->rowCount() + 1);
+}
+
+void MainWindow::onInsertClicked()
+{
+    mTableWidget->insertRow(mTableWidget->currentRow());
+}
+
+void MainWindow::onDeleteClicked()
+{
+    if (mTableWidget->rowCount()) {
+        mTableWidget->removeRow(mTableWidget->currentRow());
+    }
+}
+
+QWidget *MainWindow::createHLine()
+{
+    QFrame *frame = new QFrame;
+    frame->setFrameShape(QFrame::HLine);
+    frame->setFrameShadow(QFrame::Sunken);
+    return frame;
+}
+
 void MainWindow::fitText(QPainter &painter, const QRectF &rect, QString &text)
 {
     // Begin with a large point size that will likely exceed the bounding rect
     // and shrink the size until the text fits or the size is too small
-
     for (int fontSize = 400; fontSize > 0; fontSize -= 2) {
 
         // Try the font size
@@ -131,13 +199,11 @@ void MainWindow::fitText(QPainter &painter, const QRectF &rect, QString &text)
         painter.setFont(mFont);
         QRectF requiredRect = painter.boundingRect(rect, 0, text);
 
-        // Determine if the text fits
+        // If the text fits, draw it
         if (requiredRect.width() <= rect.width() &&
                 requiredRect.height() <= rect.height()) {
+            painter.drawText(rect, 0, text);
             break;
         }
     }
-
-    // Draw the text
-    painter.drawText(rect, 0, text);
 }

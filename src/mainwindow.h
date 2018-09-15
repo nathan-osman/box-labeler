@@ -29,7 +29,8 @@
 #include <QMainWindow>
 #include <QPainter>
 #include <QRectF>
-#include <QTextEdit>
+#include <QTableWidget>
+#include <QWidget>
 
 class MainWindow : public QMainWindow
 {
@@ -43,14 +44,16 @@ private slots:
 
     void onPrintClicked();
     void onFontClicked();
+    void onAddClicked();
+    void onInsertClicked();
+    void onDeleteClicked();
 
 private:
 
+    QWidget *createHLine();
     void fitText(QPainter &painter, const QRectF &rect, QString &text);
 
-    QTextEdit *mStyle;
-    QTextEdit *mColor;
-    QTextEdit *mSize;
+    QTableWidget *mTableWidget;
 
     QFont mFont;
 };
