@@ -25,6 +25,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QFont>
 #include <QMainWindow>
 #include <QPainter>
 #include <QRectF>
@@ -40,15 +41,18 @@ public:
 
 private slots:
 
-    void onClicked();
+    void onPrintClicked();
+    void onFontClicked();
 
 private:
 
-    void drawTextBlock(QPainter &painter, QRectF &rect, QString &text);
+    void fitText(QPainter &painter, const QRectF &rect, QString &text);
 
     QTextEdit *mStyle;
     QTextEdit *mColor;
     QTextEdit *mSize;
+
+    QFont mFont;
 };
 
 #endif // MAINWINDOW_H

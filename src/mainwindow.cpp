@@ -24,7 +24,7 @@
 
 #include <QApplication>
 #include <QDesktopWidget>
-#include <QFont>
+#include <QFontDialog>
 #include <QHBoxLayout>
 #include <QList>
 #include <QPrintDialog>
@@ -38,6 +38,10 @@
 
 MainWindow::MainWindow()
 {
+    // Initialize the default font
+    mFont.setBold(true);
+    mFont.setFamily("Corbel");
+
     // Create the text inputs and layout
     QVBoxLayout *textLayout = new QVBoxLayout;
     textLayout->addWidget(mStyle = new QTextEdit);
@@ -46,10 +50,16 @@ MainWindow::MainWindow()
     textLayout->addStretch(0);
 
     // Create the print button
-    QPushButton *pushButton = new QPushButton(tr("Print"));
-    connect(pushButton, &QPushButton::clicked, this, &MainWindow::onClicked);
+    QPushButton *printButton = new QPushButton(tr("Print"));
+    connect(printButton, &QPushButton::clicked, this, &MainWindow::onPrintClicked);
+
+    // Create the font button
+    QPushButton *fontButton = new QPushButton(tr("Font"));
+    connect(fontButton, &QPushButton::clicked, this, &MainWindow::onFontClicked);
+
     QVBoxLayout *buttonLayout = new QVBoxLayout;
-    buttonLayout->addWidget(pushButton);
+    buttonLayout->addWidget(printButton);
+    buttonLayout->addWidget(fontButton);
     buttonLayout->addStretch(0);
 
     // Create the central widget
@@ -71,52 +81,54 @@ MainWindow::MainWindow()
     mSize->setAcceptRichText(false);
 }
 
-void MainWindow::onClicked()
+void MainWindow::onPrintClicked()
 {
-    QPrinter printer;
+    // Initialize the printer and set the correct page orientation
+    QPrinter printer(QPrinter::HighResolution);
+    printer.setPageOrientation(QPageLayout::Landscape);
+
+    // Show the print dialog
     QPrintDialog printDialog(&printer);
     if (printDialog.exec() == QDialog::Accepted) {
 
-        // Ensure a landscape page
-        printer.setPageOrientation(QPageLayout::Landscape);
+        // Create a rect one-third the page height
+        QRectF rect = printer.pageRect();
+        rect.setHeight(rect.height() / 3);
 
-        // Get the page size and divide it by three
-        QRectF pageRectF = printer.pageRect(QPrinter::Point);
-        pageRectF.setHeight(pageRectF.height() / 3);
-
-        // Begin printing
+        // Prepare to draw the text
         QPainter painter;
         painter.begin(&printer);
 
-        // Draw each text block
+        // Draw each block of text
         foreach (QTextEdit *textEdit, QList<QTextEdit*>({mStyle, mColor, mSize})) {
 
             // Grab the text value
             QString value = textEdit->toPlainText();
-            drawTextBlock(painter,  pageRectF, value);
+            fitText(painter,  rect, value);
 
-            // Move the block down
-            pageRectF.translate(0, pageRectF.height());
+            // Move the rect down by its own height
+            rect.translate(0, rect.height());
         }
 
-        // Finish drawing
         painter.end();
     }
 }
 
-void MainWindow::drawTextBlock(QPainter &painter, QRectF &rect, QString &text)
+void MainWindow::onFontClicked()
 {
-    // Create the font
-    QFont font;
-    font.setBold(true);
-    font.setFamily(tr("Corbel"));
+    mFont = QFontDialog::getFont(nullptr, mFont);
+}
 
-    // Calculate the optimal size
+void MainWindow::fitText(QPainter &painter, const QRectF &rect, QString &text)
+{
+    // Begin with a large point size that will likely exceed the bounding rect
+    // and shrink the size until the text fits or the size is too small
+
     for (int fontSize = 400; fontSize > 0; fontSize -= 2) {
 
         // Try the font size
-        font.setPointSize(fontSize);
-        painter.setFont(font);
+        mFont.setPointSize(fontSize);
+        painter.setFont(mFont);
         QRectF requiredRect = painter.boundingRect(rect, 0, text);
 
         // Determine if the text fits
