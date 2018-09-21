@@ -32,9 +32,10 @@
 #include <QLabel>
 #include <QPrintDialog>
 #include <QPrinter>
-#include <QPushButton>
 #include <QRect>
+#include <QTabBar>
 #include <QTableWidgetItem>
+#include <QToolButton>
 #include <QVBoxLayout>
 
 #include "mainwindow.h"
@@ -45,60 +46,60 @@ MainWindow::MainWindow()
     // Create the description label
     QLabel *label = new QLabel(tr(
         "Use the table below to create box labels.\n\n"
-        "Enter the information for each label on a separate row. "
-        "Use the Add / Insert buttons to add more rows as needed."
+        "The page will be split evenly into the selected number of rows and columns."
     ));
     label->setWordWrap(true);
 
-    // Initialize the table widget
-    mTableWidget = new QTableWidget;
-    mTableWidget->setItemDelegate(new MultilineDelegate(this));
-    mTableWidget->setColumnCount(3);
-    mTableWidget->setHorizontalHeaderLabels(
-                QStringList() << tr("Style") << tr("Color") << tr("Sizes"));
-    mTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    connect(mTableWidget, &QTableWidget::cellChanged, this, &MainWindow::onCellChanged);
+    // Create the new tab button
+    QToolButton *newTabButton = new QToolButton;
+    newTabButton->setText(tr("+"));
+    connect(newTabButton, &QPushButton::clicked, this, &MainWindow::onNewTabClicked);
+
+    // Create the tab control
+    mTabWidget = new QTabWidget;
+    mTabWidget->setTabsClosable(true);
+    mTabWidget->addTab(new QWidget, QString());
+    mTabWidget->setTabEnabled(0, false);
+    mTabWidget->tabBar()->setTabButton(0, QTabBar::RightSide, newTabButton);
+    connect(mTabWidget, &QTabWidget::currentChanged, this, &MainWindow::onCurrentChanged);
+    connect(mTabWidget, &QTabWidget::tabCloseRequested, this, &MainWindow::onTabCloseRequested);
 
     // Initialize the default font
     mFont.setBold(true);
     mFont.setFamily("Calibri");
 
     // Create the print button
-    QPushButton *printButton = new QPushButton(tr("&Print..."));
-    printButton->setIcon(QIcon(":/img/print.png"));
-    connect(printButton, &QPushButton::clicked, this, &MainWindow::onPrintClicked);
+    mPrintButton = new QPushButton(tr("&Print..."));
+    mPrintButton->setIcon(QIcon(":/img/print.png"));
+    connect(mPrintButton, &QPushButton::clicked, this, &MainWindow::onPrintClicked);
 
     // Create the font button
-    QPushButton *fontButton = new QPushButton(tr("&Font..."));
-    fontButton->setIcon(QIcon(":/img/font.png"));
-    connect(fontButton, &QPushButton::clicked, this, &MainWindow::onFontClicked);
+    mFontButton = new QPushButton(tr("&Font..."));
+    mFontButton->setIcon(QIcon(":/img/font.png"));
+    connect(mFontButton, &QPushButton::clicked, this, &MainWindow::onFontClicked);
 
-    // Create the add button
-    QPushButton *addButton = new QPushButton(tr("&Add Row"));
-    connect(addButton, &QPushButton::clicked, this, &MainWindow::onAddClicked);
-
-    // Create the insert button
-    QPushButton *insertButton = new QPushButton(tr("&Insert Row"));
-    insertButton->setToolTip(tr("Insert a row before the currently selected one"));
-    connect(insertButton, &QPushButton::clicked, this, &MainWindow::onInsertClicked);
-
-    // Create the delete button
-    QPushButton *deleteButton = new QPushButton(tr("&Delete Row"));
-    connect(deleteButton, &QPushButton::clicked, this, &MainWindow::onDeleteClicked);
+    // Create the row / col labels and spinboxes
+    QLabel *rowLabel = new QLabel(tr("Rows:"));
+    QLabel *colLabel = new QLabel(tr("Cols:"));
+    mRowSpinBox = new QSpinBox;
+    mColSpinBox = new QSpinBox;
+    connect(mRowSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::onRowValueChanged);
+    connect(mColSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::onColValueChanged);
 
     // Create the layout for the buttons
     QVBoxLayout *buttonLayout = new QVBoxLayout;
-    buttonLayout->addWidget(printButton);
-    buttonLayout->addWidget(fontButton);
+    buttonLayout->addWidget(mPrintButton);
+    buttonLayout->addWidget(mFontButton);
     buttonLayout->addWidget(createHLine());
-    buttonLayout->addWidget(addButton);
-    buttonLayout->addWidget(insertButton);
-    buttonLayout->addWidget(deleteButton);
+    buttonLayout->addWidget(rowLabel);
+    buttonLayout->addWidget(mRowSpinBox);
+    buttonLayout->addWidget(colLabel);
+    buttonLayout->addWidget(mColSpinBox);
     buttonLayout->addStretch(0);
 
     // Create the layout that separates the table and buttons
     QHBoxLayout *hboxLayout = new QHBoxLayout;
-    hboxLayout->addWidget(mTableWidget);
+    hboxLayout->addWidget(mTabWidget);
     hboxLayout->addLayout(buttonLayout);
 
     // Create the central widget and layout
@@ -118,13 +119,51 @@ MainWindow::MainWindow()
     resize(640, 480);
     move(QApplication::desktop()->availableGeometry().center() - rect().center());
 
-    // Create one new row to begin with
-    onAddClicked();
+    // Create a new tab
+    onNewTabClicked();
+}
+
+void MainWindow::onCurrentChanged()
+{
+    QTableWidget *tableWidget = curTableWidget();
+    if (tableWidget) {
+        mRowSpinBox->setValue(tableWidget->rowCount());
+        mColSpinBox->setValue(tableWidget->columnCount());
+    }
+}
+
+void MainWindow::onTabCloseRequested(int index)
+{
+    mTabWidget->removeTab(index);
+    mTabWidget->setCurrentIndex(index - 1);
+
+    toggleTools();
+}
+
+void MainWindow::onNewTabClicked()
+{
+    // Create the widget
+    QTableWidget *tableWidget = new QTableWidget;
+    tableWidget->setItemDelegate(new MultilineDelegate(this));
+    tableWidget->setRowCount(3);
+    tableWidget->setColumnCount(1);
+    tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    tableWidget->horizontalHeader()->setMinimumSectionSize(150);
+    tableWidget->horizontalHeader()->hide();
+    tableWidget->verticalHeader()->hide();
+    connect(tableWidget, &QTableWidget::cellChanged, this, &MainWindow::onCellChanged);
+
+    // Add a new tab
+    int newIndex = mTabWidget->count() - 1;
+    mTabWidget->insertTab(newIndex, tableWidget, tr("Page"));
+    mTabWidget->setCurrentIndex(newIndex);
+
+    toggleTools();
 }
 
 void MainWindow::onCellChanged(int row)
 {
-    mTableWidget->resizeRowToContents(row);
+    curTableWidget()->resizeRowToContents(row);
 }
 
 void MainWindow::onPrintClicked()
@@ -141,33 +180,39 @@ void MainWindow::onPrintClicked()
         QPainter painter;
         painter.begin(&printer);
 
-        // Draw each page
-        for (int i = 0; i < mTableWidget->rowCount(); ++i) {
+        // Print a page for each tab
+        for (int n = 0; n < mTabWidget->count() - 1; ++n) {
 
-            // Create a rect one-third the page height
+            QTableWidget *tableWidget = qobject_cast<QTableWidget*>(
+                        mTabWidget->widget(n));
+
+            // Create a rect of the appropriate size
             QRectF rect = printer.pageRect();
-            rect.setHeight(rect.height() / 3);
+            rect.setWidth(rect.width() / tableWidget->columnCount());
+            rect.setHeight(rect.height() / tableWidget->rowCount());
 
-            // Draw the three blocks of text
-            for (int j = 0; j < 3; ++j) {
+            // Divide the page into evenly-sized cells and fit the text into them
+            for (int i = 0; i < tableWidget->columnCount(); ++i) {
+                for (int j = 0; j < tableWidget->rowCount(); ++j) {
 
-                // Draw the text value
-                QTableWidgetItem *item = mTableWidget->item(i, j);
-                if (item) {
-                    QString value = item->text();
-                    fitText(painter, rect, value);
+                    // Draw the text value
+                    QTableWidgetItem *item = tableWidget->item(j, i);
+                    if (item) {
+                        QString value = item->text();
+                        fitText(painter,
+                                rect.translated(i * rect.width(), j * rect.height()),
+                                value);
+                    }
                 }
-
-                // Move the rect down by its own height
-                rect.translate(0, rect.height());
             }
 
-            // Advance to the next page if necessary
-            if (i + 1 < mTableWidget->rowCount()) {
+            // Advance to the next page if there are more remaining
+            if (n < mTabWidget->count() - 2) {
                 printer.newPage();
             }
         }
 
+        // Finish drawing
         painter.end();
     }
 }
@@ -177,21 +222,24 @@ void MainWindow::onFontClicked()
     mFont = QFontDialog::getFont(nullptr, mFont);
 }
 
-void MainWindow::onAddClicked()
+void MainWindow::onRowValueChanged()
 {
-    mTableWidget->setRowCount(mTableWidget->rowCount() + 1);
+    curTableWidget()->setRowCount(mRowSpinBox->value());
 }
 
-void MainWindow::onInsertClicked()
+void MainWindow::onColValueChanged()
 {
-    mTableWidget->insertRow(mTableWidget->currentRow());
+    curTableWidget()->setColumnCount(mColSpinBox->value());
 }
 
-void MainWindow::onDeleteClicked()
+void MainWindow::toggleTools()
 {
-    if (mTableWidget->rowCount()) {
-        mTableWidget->removeRow(mTableWidget->currentRow());
-    }
+    bool enable = mTabWidget->count() > 1;
+
+    mPrintButton->setEnabled(enable);
+    mFontButton->setEnabled(enable);
+    mRowSpinBox->setEnabled(enable);
+    mColSpinBox->setEnabled(enable);
 }
 
 QWidget *MainWindow::createHLine()

@@ -28,8 +28,11 @@
 #include <QFont>
 #include <QMainWindow>
 #include <QPainter>
+#include <QPushButton>
 #include <QRectF>
+#include <QSpinBox>
 #include <QTableWidget>
+#include <QTabWidget>
 #include <QWidget>
 
 class MainWindow : public QMainWindow
@@ -42,20 +45,35 @@ public:
 
 private slots:
 
+    void onCurrentChanged();
+    void onTabCloseRequested(int index);
+    void onNewTabClicked();
+
     void onCellChanged(int row);
 
     void onPrintClicked();
     void onFontClicked();
-    void onAddClicked();
-    void onInsertClicked();
-    void onDeleteClicked();
+
+    void onRowValueChanged();
+    void onColValueChanged();
 
 private:
 
+    inline QTableWidget *curTableWidget() const {
+        return qobject_cast<QTableWidget*>(mTabWidget->currentWidget());
+    }
+
+    void toggleTools();
     QWidget *createHLine();
     void fitText(QPainter &painter, const QRectF &rect, QString &text);
 
-    QTableWidget *mTableWidget;
+    QTabWidget *mTabWidget;
+
+    QPushButton *mPrintButton;
+    QPushButton *mFontButton;
+
+    QSpinBox *mRowSpinBox;
+    QSpinBox *mColSpinBox;
 
     QFont mFont;
 };
