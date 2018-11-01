@@ -22,37 +22,47 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef PAGEWIDGET_H
+#define PAGEWIDGET_H
 
 #include <QFont>
-#include <QMainWindow>
-#include <QPushButton>
-#include <QTabWidget>
+#include <QLineEdit>
+#include <QPaintDevice>
+#include <QPainter>
+#include <QRectF>
+#include <QTableWidget>
 #include <QWidget>
 
-class MainWindow : public QMainWindow
+/**
+ * @brief Widget for displaying and editing page data
+ */
+class PageWidget : public QWidget
 {
     Q_OBJECT
 
 public:
 
-    MainWindow();
+    PageWidget();
 
-private slots:
-
-    void onPrintClicked();
+    /**
+     * @brief Draw the page
+     * @param device use this device for drawing the page
+     * @param font use this font for drawing text
+     * @param rect dimensions of the page
+     */
+    void draw(QPaintDevice *device, const QFont &font, const QRectF &rect);
 
 private:
 
-    void toggleTools();
-    QWidget *createHLine();
+    void fitText(QPainter &painter,
+                 const QFont &font,
+                 const QRectF &rect,
+                 const QString &text);
 
-    QTabWidget *mTabWidget;
+    QLineEdit *mHeaderEdit;
+    QLineEdit *mFooterEdit;
 
-    QPushButton *mPrintButton;
-
-    QFont mFont;
+    QTableWidget *mTableWidget;
 };
 
-#endif // MAINWINDOW_H
+#endif // PAGEWIDGET_H

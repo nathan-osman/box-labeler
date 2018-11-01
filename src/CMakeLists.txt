@@ -4,6 +4,10 @@ set(SRC
     mainwindow.cpp
     multilinedelegate.h
     multilinedelegate.cpp
+    pagewidget.h
+    pagewidget.cpp
+    previewwidget.h
+    previewwidget.cpp
     resource.qrc
     resource.rc
 )
@@ -17,3 +21,6 @@ set_target_properties(box-labeler PROPERTIES
 target_link_libraries(box-labeler Qt5::PrintSupport Qt5::Widgets)
 
 install(TARGETS box-labeler RUNTIME DESTINATION bin)
+
+set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE)
+include(InstallRequiredSystemLibraries)

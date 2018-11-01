@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
+        <file>img/about.png</file>
         <file>img/box-labeler.png</file>
         <file>img/font.png</file>
         <file>img/print.png</file>

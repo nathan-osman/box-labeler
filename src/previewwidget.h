@@ -22,37 +22,18 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef PREVIEWWIDGET_H
+#define PREVIEWWIDGET_H
 
-#include <QFont>
-#include <QMainWindow>
-#include <QPushButton>
-#include <QTabWidget>
 #include <QWidget>
 
-class MainWindow : public QMainWindow
+class PreviewWidget : public QWidget
 {
     Q_OBJECT
 
 public:
 
-    MainWindow();
-
-private slots:
-
-    void onPrintClicked();
-
-private:
-
-    void toggleTools();
-    QWidget *createHLine();
-
-    QTabWidget *mTabWidget;
-
-    QPushButton *mPrintButton;
-
-    QFont mFont;
+    virtual void paintEvent(QPaintEvent *event);
 };
 
-#endif // MAINWINDOW_H
+#endif // PREVIEWWIDGET_H
