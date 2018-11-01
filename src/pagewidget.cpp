@@ -165,7 +165,7 @@ void PageWidget::fitText(QPainter &painter,
         // If the text fits, draw it
         if (requiredRect.width() <= rect.width() &&
                 requiredRect.height() <= rect.height()) {
-            painter.drawText(rect, 0, text);
+            painter.drawText(rect, Qt::AlignVCenter, text);
             return;
         }
     }
