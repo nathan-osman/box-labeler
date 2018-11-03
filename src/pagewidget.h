@@ -52,6 +52,13 @@ public:
      */
     void draw(QPaintDevice *device, const QFont &font, const QRectF &rect);
 
+signals:
+
+    /**
+     * @brief Indicate that the widget has changed
+     */
+    void changed();
+
 private:
 
     void fitText(QPainter &painter,

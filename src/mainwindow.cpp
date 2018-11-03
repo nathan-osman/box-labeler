@@ -26,14 +26,18 @@
 #include <QDesktopWidget>
 #include <QFontDialog>
 #include <QFrame>
+#include <QGraphicsScene>
+#include <QGraphicsView>
 #include <QHBoxLayout>
 #include <QIcon>
 #include <QLabel>
 #include <QList>
 #include <QMessageBox>
 #include <QPageSize>
+#include <QPixmap>
 #include <QPrintDialog>
 #include <QPrinter>
+#include <QSplitter>
 #include <QTabBar>
 #include <QToolButton>
 #include <QVBoxLayout>
@@ -55,12 +59,20 @@ const QList<PageType> gPageTypes = {
 
 MainWindow::MainWindow()
 {
+    // Create the graphics scene and view
+    QGraphicsScene *graphicsScene= new QGraphicsScene;
+    graphicsScene->addItem(mGraphicsPixmapItem = new QGraphicsPixmapItem);
+    QGraphicsView *graphicsView = new QGraphicsView(graphicsScene);
+    graphicsView->setBackgroundBrush(QBrush(Qt::gray));
+
     // Create the new tab button
     QToolButton *newTabButton = new QToolButton;
     newTabButton->setText(tr("+"));
     connect(newTabButton, &QPushButton::clicked, [this]() {
         int newIndex = mTabWidget->count() - 1;
-        mTabWidget->insertTab(newIndex, new PageWidget, tr("Page"));
+        PageWidget *pageWidget = new PageWidget;
+        connect(pageWidget, &PageWidget::changed, this, &MainWindow::redraw);
+        mTabWidget->insertTab(newIndex, pageWidget, tr("Page"));
         mTabWidget->setCurrentIndex(newIndex);
         toggleTools();
     });
@@ -71,6 +83,7 @@ MainWindow::MainWindow()
     mTabWidget->addTab(new QWidget, QString());
     mTabWidget->setTabEnabled(0, false);
     mTabWidget->tabBar()->setTabButton(0, QTabBar::RightSide, newTabButton);
+    connect(mTabWidget, &QTabWidget::currentChanged, this, &MainWindow::redraw);
     connect(mTabWidget, &QTabWidget::tabCloseRequested, [this](int index) {
         mTabWidget->removeTab(index);
         mTabWidget->setCurrentIndex(index - 1);
@@ -98,6 +111,8 @@ MainWindow::MainWindow()
     for (auto i = gPageTypes.constBegin(); i != gPageTypes.constEnd(); ++i) {
         mPageTypeCombo->addItem(i->name);
     }
+    connect(mPageTypeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &MainWindow::redraw);
 
     // Create the about button
     QPushButton *aboutButton = new QPushButton(tr("&About..."));
@@ -120,9 +135,14 @@ MainWindow::MainWindow()
     toolsLayout->addStretch(0);
     toolsLayout->addWidget(aboutButton);
 
+    // Create the splitter
+    QSplitter *splitter = new QSplitter;
+    splitter->addWidget(graphicsView);
+    splitter->addWidget(mTabWidget);
+
     // Create the layout that separates the tabs and buttons
     QHBoxLayout *hboxLayout = new QHBoxLayout;
-    hboxLayout->addWidget(mTabWidget);
+    hboxLayout->addWidget(splitter);
     hboxLayout->addLayout(toolsLayout);
 
     // Create the central widget and layout
@@ -137,11 +157,42 @@ MainWindow::MainWindow()
     setStyleSheet("QPushButton { padding: 8px 16px; }");
     setWindowIcon(QIcon(":/img/box-labeler.png"));
     setWindowTitle(tr("Box Labeler"));
-    resize(640, 480);
+    resize(1024, 480);
     move(QApplication::desktop()->availableGeometry().center() - rect().center());
 
     // Simulate the addition of a new tab
     newTabButton->click();
+
+    // Redraw the preview
+    redraw();
+}
+
+void MainWindow::redraw()
+{
+    // Retrieve the current tab
+    QWidget *widget = mTabWidget->currentWidget();
+    if (!widget) {
+        return;
+    }
+
+    // Calculate the page size in pixels at 36dpi
+    PageType pageType = gPageTypes.value(mPageTypeCombo->currentIndex());
+    QRect pageRect = pageType.size.rectPixels(36);
+    if (pageType.orientation == QPrinter::Landscape) {
+        pageRect = pageRect.transposed();
+    }
+
+    // Create an image of the specified size and render it
+    QPixmap pixmap(pageRect.width(), pageRect.height());
+    pixmap.fill();
+    qobject_cast<PageWidget*>(widget)->draw(
+        &pixmap,
+        mFont,
+        pageRect
+    );
+
+    // Show the image
+    mGraphicsPixmapItem->setPixmap(pixmap);
 }
 
 void MainWindow::onPrintClicked()

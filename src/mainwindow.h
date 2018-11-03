@@ -27,6 +27,7 @@
 
 #include <QComboBox>
 #include <QFont>
+#include <QGraphicsPixmapItem>
 #include <QMainWindow>
 #include <QPushButton>
 #include <QTabWidget>
@@ -42,12 +43,15 @@ public:
 
 private slots:
 
+    void redraw();
     void onPrintClicked();
 
 private:
 
     void toggleTools();
     QWidget *createHLine();
+
+    QGraphicsPixmapItem *mGraphicsPixmapItem;
 
     QTabWidget *mTabWidget;
     QPushButton *mPrintButton;

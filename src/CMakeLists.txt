@@ -6,8 +6,6 @@ set(SRC
     multilinedelegate.cpp
     pagewidget.h
     pagewidget.cpp
-    previewwidget.h
-    previewwidget.cpp
     resource.qrc
     resource.rc
 )

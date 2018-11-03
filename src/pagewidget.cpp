@@ -41,16 +41,23 @@ PageWidget::PageWidget()
     headerFooterLayout->addWidget(mHeaderEdit = new QLineEdit, 0, 1);
     headerFooterLayout->addWidget(mFooterEdit = new QLineEdit, 1, 1);
 
+    connect(mHeaderEdit, &QLineEdit::textChanged, this, &PageWidget::changed);
+    connect(mFooterEdit, &QLineEdit::textChanged, this, &PageWidget::changed);
+
     // Create the spinners for controlling table size
+
     QSpinBox *rowSpinBox = new QSpinBox;
     rowSpinBox->setValue(1);
     connect(rowSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this](int val) {
         mTableWidget->setRowCount(val);
+        emit changed();
     });
+
     QSpinBox *colSpinBox = new QSpinBox;
     colSpinBox->setValue(1);
     connect(colSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this](int val) {
         mTableWidget->setColumnCount(val);
+        emit changed();
     });
 
     // Create the layout for the controls
@@ -76,6 +83,7 @@ PageWidget::PageWidget()
     // Resize the cell when its value changes
     connect(mTableWidget, &QTableWidget::cellChanged, [this](int row) {
         mTableWidget->resizeRowToContents(row);
+        emit changed();
     });
 
     // Set the layout for the widget
