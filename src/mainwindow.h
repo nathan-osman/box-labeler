@@ -25,6 +25,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QComboBox>
 #include <QFont>
 #include <QMainWindow>
 #include <QPushButton>
@@ -49,8 +50,8 @@ private:
     QWidget *createHLine();
 
     QTabWidget *mTabWidget;
-
     QPushButton *mPrintButton;
+    QComboBox *mPageTypeCombo;
 
     QFont mFont;
 };

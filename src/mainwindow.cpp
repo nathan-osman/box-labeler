@@ -28,7 +28,10 @@
 #include <QFrame>
 #include <QHBoxLayout>
 #include <QIcon>
+#include <QLabel>
+#include <QList>
 #include <QMessageBox>
+#include <QPageSize>
 #include <QPrintDialog>
 #include <QPrinter>
 #include <QTabBar>
@@ -37,6 +40,18 @@
 
 #include "mainwindow.h"
 #include "pagewidget.h"
+
+struct PageType {
+    QString name;
+    QPrinter::Orientation orientation;
+    QPageSize size;
+};
+
+const QList<PageType> gPageTypes = {
+    PageType{ "Letter (landscape)", QPrinter::Landscape, QPageSize(QPageSize::Letter) },
+    PageType{ "Letter (portrait)", QPrinter::Portrait, QPageSize(QPageSize::Letter) },
+    PageType{ "Label", QPrinter::Landscape, QPageSize(QSizeF(4, 6), QPageSize::Inch) }
+};
 
 MainWindow::MainWindow()
 {
@@ -78,6 +93,12 @@ MainWindow::MainWindow()
         mFont = QFontDialog::getFont(nullptr, mFont);
     });
 
+    // Create the page type combo and populate it
+    mPageTypeCombo = new QComboBox;
+    for (auto i = gPageTypes.constBegin(); i != gPageTypes.constEnd(); ++i) {
+        mPageTypeCombo->addItem(i->name);
+    }
+
     // Create the about button
     QPushButton *aboutButton = new QPushButton(tr("&About..."));
     aboutButton->setIcon(QIcon(":/img/about.png"));
@@ -94,8 +115,10 @@ MainWindow::MainWindow()
     toolsLayout->addWidget(mPrintButton);
     toolsLayout->addWidget(fontButton);
     toolsLayout->addWidget(createHLine());
-    toolsLayout->addWidget(aboutButton);
+    toolsLayout->addWidget(new QLabel(tr("Page type:")));
+    toolsLayout->addWidget(mPageTypeCombo);
     toolsLayout->addStretch(0);
+    toolsLayout->addWidget(aboutButton);
 
     // Create the layout that separates the tabs and buttons
     QHBoxLayout *hboxLayout = new QHBoxLayout;
@@ -123,9 +146,12 @@ MainWindow::MainWindow()
 
 void MainWindow::onPrintClicked()
 {
+    PageType pageType = gPageTypes.value(mPageTypeCombo->currentIndex());
+
     // Initialize the printer
     QPrinter printer(QPrinter::HighResolution);
-    printer.setOrientation(QPrinter::Landscape);
+    printer.setPageSize(pageType.size);
+    printer.setOrientation(pageType.orientation);
 
     // Show the print dialog
     QPrintDialog printDialog(&printer);
