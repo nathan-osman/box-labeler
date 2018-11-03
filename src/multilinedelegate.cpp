@@ -43,7 +43,9 @@ QWidget *MultilineDelegate::createEditor(QWidget *parent,
 
 void MultilineDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
 {
-    qobject_cast<QTextEdit*>(editor)->setPlainText(index.data().toString());
+    auto textEdit = qobject_cast<QTextEdit*>(editor);
+    textEdit->setPlainText(index.data().toString());
+    textEdit->selectAll();
 }
 
 void MultilineDelegate::setModelData(QWidget *editor,
