@@ -185,11 +185,15 @@ void MainWindow::redraw()
     // Create an image of the specified size and render it
     QPixmap pixmap(pageRect.width(), pageRect.height());
     pixmap.fill();
-    qobject_cast<PageWidget*>(widget)->draw(
-        &pixmap,
-        mFont,
-        pageRect
-    );
+
+    PageWidget *pageWidget = qobject_cast<PageWidget*>(widget);
+    if (pageWidget) {
+        pageWidget->draw(
+            &pixmap,
+            mFont,
+            pageRect
+        );
+    }
 
     // Show the image
     mGraphicsPixmapItem->setPixmap(pixmap);
