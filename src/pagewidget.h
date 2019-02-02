@@ -49,8 +49,9 @@ public:
      * @param device use this device for drawing the page
      * @param font use this font for drawing text
      * @param rect dimensions of the page
+     * @param spacing the amount of spacing between cells
      */
-    void draw(QPaintDevice *device, const QFont &font, const QRectF &rect);
+    void draw(QPaintDevice *device, const QFont &font, const QRectF &rect, int spacing);
 
 signals:
 

@@ -114,6 +114,12 @@ MainWindow::MainWindow()
     connect(mPageTypeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &MainWindow::redraw);
 
+    // Create the spacing button
+    mSpacing = new QSpinBox;
+    mSpacing->setValue(10);
+    connect(mSpacing, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &MainWindow::redraw);
+
     // Create the about button
     QPushButton *aboutButton = new QPushButton(tr("&About..."));
     aboutButton->setIcon(QIcon(":/img/about.png"));
@@ -132,6 +138,8 @@ MainWindow::MainWindow()
     toolsLayout->addWidget(createHLine());
     toolsLayout->addWidget(new QLabel(tr("Page type:")));
     toolsLayout->addWidget(mPageTypeCombo);
+    toolsLayout->addWidget(new QLabel(tr("Spacing:")));
+    toolsLayout->addWidget(mSpacing);
     toolsLayout->addStretch(0);
     toolsLayout->addWidget(aboutButton);
 
@@ -191,7 +199,8 @@ void MainWindow::redraw()
         pageWidget->draw(
             &pixmap,
             mFont,
-            pageRect
+            pageRect,
+            mSpacing->value()
         );
     }
 
@@ -219,7 +228,8 @@ void MainWindow::onPrintClicked()
             qobject_cast<PageWidget*>(mTabWidget->widget(n))->draw(
                 &printer,
                 mFont,
-                printer.pageRect()
+                printer.pageRect(),
+                mSpacing->value()
             );
 
             // Advance to the next page if applicable

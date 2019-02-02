@@ -30,6 +30,7 @@
 #include <QGraphicsPixmapItem>
 #include <QMainWindow>
 #include <QPushButton>
+#include <QSpinBox>
 #include <QTabWidget>
 #include <QWidget>
 
@@ -56,6 +57,7 @@ private:
     QTabWidget *mTabWidget;
     QPushButton *mPrintButton;
     QComboBox *mPageTypeCombo;
+    QSpinBox *mSpacing;
 
     QFont mFont;
 };

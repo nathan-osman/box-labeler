@@ -90,19 +90,27 @@ PageWidget::PageWidget()
     setLayout(vboxLayout);
 }
 
-void PageWidget::draw(QPaintDevice *device, const QFont &font, const QRectF &rect)
+void PageWidget::draw(QPaintDevice *device, const QFont &font, const QRectF &rect, int spacing)
 {
     bool hasHeader = !mHeaderEdit->text().isEmpty();
     bool hasFooter = !mFooterEdit->text().isEmpty();
 
+    int rows = mTableWidget->rowCount();
+    int columns = mTableWidget->columnCount();
+
+    // No division by zero
+    if (!rows || !columns) {
+        return;
+    }
+
     // Calculate the number of rows to divide the rect into
-    int numRows = mTableWidget->rowCount() +
+    int numRows = rows +
             (hasHeader ? 1 : 0) +
             (hasFooter ? 1 : 0);
 
-    // Calculate cell width and height
+    // Calculate cell width and height (taking spacing into account)
     qreal offset = rect.top();
-    qreal cellWidth = rect.width() / mTableWidget->columnCount();
+    qreal cellWidth = (rect.width() - spacing * (columns - 1)) / columns;
     qreal cellHeight = rect.height() / numRows;
 
     // Begin painting
@@ -121,15 +129,15 @@ void PageWidget::draw(QPaintDevice *device, const QFont &font, const QRectF &rec
     }
 
     // Draw each cell
-    for (int i = 0; i < mTableWidget->columnCount(); ++i) {
-        for (int j = 0; j < mTableWidget->rowCount(); ++j) {
+    for (int i = 0; i < columns; ++i) {
+        for (int j = 0; j < rows; ++j) {
             QTableWidgetItem *item = mTableWidget->item(j, i);
             if (item) {
                 fitText(
                     painter,
                     font,
                     QRectF(
-                        rect.left() + i * cellWidth,
+                        rect.left() + i * (cellWidth + spacing),
                         rect.top() + offset + j * cellHeight,
                         cellWidth,
                         cellHeight
