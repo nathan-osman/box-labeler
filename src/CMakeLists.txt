@@ -1,4 +1,6 @@
 set(SRC
+    cell.h
+    cell.cpp
     main.cpp
     mainwindow.h
     mainwindow.cpp
@@ -8,6 +10,8 @@ set(SRC
     pagewidget.cpp
     resource.qrc
     resource.rc
+    sheet.h
+    sheet.cpp
 )
 
 add_executable(box-labeler WIN32 ${SRC})
