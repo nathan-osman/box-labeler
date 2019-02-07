@@ -27,6 +27,7 @@
 #include <QLineEdit>
 #include <QSpinBox>
 #include <QTableWidget>
+#include <QTableWidgetItem>
 #include <QVBoxLayout>
 
 #include "multilinedelegate.h"
@@ -54,7 +55,8 @@ SheetWidget::SheetWidget()
     tableWidget->setItemDelegate(new MultilineDelegate(this));
     tableWidget->horizontalHeader()->hide();
     tableWidget->verticalHeader()->hide();
-    connect(tableWidget, &QTableWidget::cellChanged, [this, tableWidget](int row) {
+    connect(tableWidget, &QTableWidget::cellChanged, [this, tableWidget](int row, int col) {
+        mSheet.cell(row, col).setText(tableWidget->item(row, col)->text());
         tableWidget->resizeRowToContents(row);
         emit changed();
     });
@@ -63,10 +65,12 @@ SheetWidget::SheetWidget()
     QSpinBox *rowSpinBox = new QSpinBox;
     QSpinBox *colSpinBox = new QSpinBox;
     connect(rowSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this, tableWidget](int val) {
+        mSheet.setRows(val);
         tableWidget->setRowCount(val);
         emit changed();
     });
     connect(colSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this, tableWidget](int val) {
+        mSheet.setCols(val);
         tableWidget->setColumnCount(val);
         emit changed();
     });
@@ -89,7 +93,7 @@ SheetWidget::SheetWidget()
     setLayout(vboxLayout);
 }
 
-const Sheet &SheetWidget::sheet() const
+Sheet &SheetWidget::sheet()
 {
     return mSheet;
 }

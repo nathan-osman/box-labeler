@@ -40,7 +40,7 @@ public:
 
     SheetWidget();
 
-    const Sheet &sheet() const;
+    Sheet &sheet();
 
 signals:
 

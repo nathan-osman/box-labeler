@@ -46,10 +46,6 @@ public:
     QString headerText;
     QString footerText;
 
-    int rowCount;
-    int colCount;
-    QVector<Cell> cells;
-
     QFont font;
 
     enum {
@@ -60,14 +56,20 @@ public:
     int hSpacing;
     int vSpacing;
 
-    void draw(QPaintDevice *device, const QRectF &rect) const;
+    Cell &cell(int row, int col);
+    void setRows(int rows);
+    void setCols(int cols);
+
+    void draw(QPaintDevice *device, const QRectF &rect);
 
 private:
 
     void fitText(QPainter &painter,
-                 const QFont &font,
                  const QRectF &rect,
                  const QString &text) const;
+
+    int mColCount;
+    QVector<QVector<Cell>> mCells;
 };
 
 #endif // SHEET_H

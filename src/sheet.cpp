@@ -25,33 +25,52 @@
 #include "sheet.h"
 
 Sheet::Sheet()
-    : rowCount(0),
-      colCount(0),
-      orientation(Portrait),
+    : orientation(Portrait),
       hSpacing(0),
-      vSpacing(0)
+      vSpacing(0),
+      mColCount(0)
 {
     font.setBold(true);
     font.setFamily("Calibri");
 }
 
-void Sheet::draw(QPaintDevice *device, const QRectF &rect) const
+Cell &Sheet::cell(int row, int col)
+{
+    Q_ASSERT(row < mCells.count());
+    auto &cellRow = mCells[row];
+    if (cellRow.count() != mColCount) {
+        cellRow.resize(mColCount);
+    }
+    return cellRow[col];
+}
+
+void Sheet::setRows(int rows)
+{
+    mCells.resize(rows);
+}
+
+void Sheet::setCols(int cols)
+{
+    mColCount = cols;
+}
+
+void Sheet::draw(QPaintDevice *device, const QRectF &rect)
 {
     bool hasHeader = !headerText.isEmpty();
     bool hasFooter = !footerText.isEmpty();
 
     // Ensure non-zero rows and columns
-    if (!rowCount || !colCount) {
+    if (!mCells.count() || !mColCount) {
         return;
     }
 
     // Calculate the number of rows being drawn
-    int drawRowCount = rowCount + (hasHeader ? 1 : 0) + (hasFooter ? 1 : 0);
+    int rowCount = mCells.count() + (hasHeader ? 1 : 0) + (hasFooter ? 1 : 0);
 
     // Calculate the cell width and height, taking spacing into account
     qreal vOffset = rect.top();
-    qreal cellWidth = (rect.width() - hSpacing * (colCount - 1)) / colCount;
-    qreal cellHeight = (rect.height() - vSpacing * (drawRowCount - 1)) / drawRowCount;
+    qreal cellWidth = (rect.width() - hSpacing * (mColCount - 1)) / mColCount;
+    qreal cellHeight = (rect.height() - vSpacing * (rowCount - 1)) / rowCount;
 
     // Begin painting
     QPainter painter;
@@ -61,7 +80,6 @@ void Sheet::draw(QPaintDevice *device, const QRectF &rect) const
     if (hasHeader) {
         fitText(
             painter,
-            font,
             QRectF(rect.left(), rect.top(), rect.width(), cellHeight),
             headerText
         );
@@ -69,19 +87,18 @@ void Sheet::draw(QPaintDevice *device, const QRectF &rect) const
     }
 
     // Draw each cell
-    for (int i = 0; i < rowCount; ++i) {
-        for (int j = 0; j < colCount; ++j) {
-            const Cell &cell = cells.at(i + j * colCount);
+    for (auto i = 0; i < mCells.count(); ++i) {
+        for (auto j = 0; j < mColCount; ++j) {
+            auto &c = cell(i, j);
             fitText(
                 painter,
-                font,
                 QRectF(
                     rect.left() + j * (cellWidth + hSpacing),
                     rect.top() + i * (cellHeight + vSpacing) + vOffset,
                     cellWidth,
                     cellHeight
                 ),
-                cell.text()
+                c.text()
             );
         }
     }
@@ -90,7 +107,6 @@ void Sheet::draw(QPaintDevice *device, const QRectF &rect) const
     if (hasFooter) {
         fitText(
             painter,
-            font,
             QRectF(rect.left(), rect.bottom() - cellHeight, rect.width(), cellHeight),
             footerText
         );
@@ -101,7 +117,6 @@ void Sheet::draw(QPaintDevice *device, const QRectF &rect) const
 }
 
 void Sheet::fitText(QPainter &painter,
-                    const QFont &font,
                     const QRectF &rect,
                     const QString &text) const
 {
