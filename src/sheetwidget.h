@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2018 Nathan Osman
+ * Copyright (c) 2019 Nathan Osman
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,55 +22,33 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef PAGEWIDGET_H
-#define PAGEWIDGET_H
+#ifndef SHEETWIDGET_H
+#define SHEETWIDGET_H
 
-#include <QFont>
-#include <QLineEdit>
-#include <QPaintDevice>
-#include <QPainter>
-#include <QRectF>
-#include <QTableWidget>
 #include <QWidget>
 
+#include "sheet.h"
+
 /**
- * @brief Widget for displaying and editing page data
+ * @brief Widget for editing a sheet
  */
-class PageWidget : public QWidget
+class SheetWidget : public QWidget
 {
     Q_OBJECT
 
 public:
 
-    PageWidget();
+    SheetWidget();
 
-    /**
-     * @brief Draw the page
-     * @param device use this device for drawing the page
-     * @param font use this font for drawing text
-     * @param rect dimensions of the page
-     * @param spacing the amount of spacing between cells
-     */
-    void draw(QPaintDevice *device, const QFont &font, const QRectF &rect, int spacing);
+    const Sheet &sheet() const;
 
 signals:
 
-    /**
-     * @brief Indicate that the widget has changed
-     */
     void changed();
 
 private:
 
-    void fitText(QPainter &painter,
-                 const QFont &font,
-                 const QRectF &rect,
-                 const QString &text);
-
-    QLineEdit *mHeaderEdit;
-    QLineEdit *mFooterEdit;
-
-    QTableWidget *mTableWidget;
+    Sheet mSheet;
 };
 
-#endif // PAGEWIDGET_H
+#endif // SHEETWIDGET_H

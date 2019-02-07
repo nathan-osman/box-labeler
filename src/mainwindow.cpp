@@ -23,102 +23,53 @@
  */
 
 #include <QApplication>
+#include <QBrush>
 #include <QDesktopWidget>
-#include <QFontDialog>
-#include <QFrame>
+#include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
 #include <QGraphicsView>
 #include <QHBoxLayout>
 #include <QIcon>
-#include <QLabel>
-#include <QList>
 #include <QMessageBox>
 #include <QPageSize>
 #include <QPixmap>
-#include <QPrintDialog>
-#include <QPrinter>
+#include <QPushButton>
+#include <QRect>
 #include <QSplitter>
-#include <QTabBar>
-#include <QToolButton>
 #include <QVBoxLayout>
 
 #include "mainwindow.h"
-#include "pagewidget.h"
-
-struct PageType {
-    QString name;
-    QPrinter::Orientation orientation;
-    QPageSize size;
-};
-
-const QList<PageType> gPageTypes = {
-    PageType{ "Letter (landscape)", QPrinter::Landscape, QPageSize(QPageSize::Letter) },
-    PageType{ "Letter (portrait)", QPrinter::Portrait, QPageSize(QPageSize::Letter) },
-    PageType{ "Label", QPrinter::Landscape, QPageSize(QSizeF(4, 6), QPageSize::Inch) }
-};
+#include "sheetwidget.h"
 
 MainWindow::MainWindow()
+    : mSheetWidget(new SheetWidget)
 {
     // Create the graphics scene and view
+    QGraphicsPixmapItem *graphicsPixmapItem = new QGraphicsPixmapItem;
     QGraphicsScene *graphicsScene= new QGraphicsScene;
-    graphicsScene->addItem(mGraphicsPixmapItem = new QGraphicsPixmapItem);
+    graphicsScene->addItem(graphicsPixmapItem);
     QGraphicsView *graphicsView = new QGraphicsView(graphicsScene);
     graphicsView->setBackgroundBrush(QBrush(Qt::gray));
 
-    // Create the new tab button
-    QToolButton *newTabButton = new QToolButton;
-    newTabButton->setText(tr("+"));
-    connect(newTabButton, &QPushButton::clicked, [this]() {
-        int newIndex = mTabWidget->count() - 1;
-        PageWidget *pageWidget = new PageWidget;
-        connect(pageWidget, &PageWidget::changed, this, &MainWindow::redraw);
-        mTabWidget->insertTab(newIndex, pageWidget, tr("Page"));
-        mTabWidget->setCurrentIndex(newIndex);
-        toggleTools();
-    });
+    // Draw the preview when the widget changes
+    connect(mSheetWidget, &SheetWidget::changed, [this, graphicsPixmapItem]() {
 
-    // Create the tab control
-    mTabWidget = new QTabWidget;
-    mTabWidget->setTabsClosable(true);
-    mTabWidget->addTab(new QWidget, QString());
-    mTabWidget->setTabEnabled(0, false);
-    mTabWidget->tabBar()->setTabButton(0, QTabBar::RightSide, newTabButton);
-    connect(mTabWidget, &QTabWidget::currentChanged, this, &MainWindow::redraw);
-    connect(mTabWidget, &QTabWidget::tabCloseRequested, [this](int index) {
-        mTabWidget->removeTab(index);
-        mTabWidget->setCurrentIndex(index - 1);
-        toggleTools();
-    });
+        // Create the rect (at 36 DPI)
+        QRect pageRect = QPageSize(QPageSize::Letter).rectPixels(36);
 
-    // Initialize the default font
-    mFont.setBold(true);
-    mFont.setFamily("Calibri");
+        // Create the pixmap
+        QPixmap pixmap(pageRect.width(), pageRect.height());
+        pixmap.fill();
+
+        // Draw the contents and display it
+        mSheetWidget->sheet().draw(&pixmap, pageRect);
+        graphicsPixmapItem->setPixmap(pixmap);
+    });
 
     // Create the print button
-    mPrintButton = new QPushButton(tr("&Print..."));
-    mPrintButton->setIcon(QIcon(":/img/print.png"));
-    connect(mPrintButton, &QPushButton::clicked, this, &MainWindow::onPrintClicked);
-
-    // Create the font button
-    QPushButton *fontButton = new QPushButton(tr("&Font..."));
-    fontButton->setIcon(QIcon(":/img/font.png"));
-    connect(fontButton, &QPushButton::clicked, [this]() {
-        mFont = QFontDialog::getFont(nullptr, mFont);
-    });
-
-    // Create the page type combo and populate it
-    mPageTypeCombo = new QComboBox;
-    for (auto i = gPageTypes.constBegin(); i != gPageTypes.constEnd(); ++i) {
-        mPageTypeCombo->addItem(i->name);
-    }
-    connect(mPageTypeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, &MainWindow::redraw);
-
-    // Create the spacing button
-    mSpacing = new QSpinBox;
-    mSpacing->setValue(10);
-    connect(mSpacing, QOverload<int>::of(&QSpinBox::valueChanged),
-            this, &MainWindow::redraw);
+    QPushButton *printButton = new QPushButton(tr("&Print"));
+    printButton->setIcon(QIcon(":/img/print.png"));
+    connect(printButton, &QPushButton::clicked, this, &MainWindow::onPrintClicked);
 
     // Create the about button
     QPushButton *aboutButton = new QPushButton(tr("&About..."));
@@ -127,128 +78,44 @@ MainWindow::MainWindow()
         QMessageBox::information(
             this,
             tr("About"),
-            tr("Box Labeler\n\nCopyright 2018 - Nathan Osman")
+            tr("Box Labeler\n\nCopyright 2019 - Nathan Osman")
         );
     });
 
-    // Create the layout for the tools
-    QVBoxLayout *toolsLayout = new QVBoxLayout;
-    toolsLayout->addWidget(mPrintButton);
-    toolsLayout->addWidget(fontButton);
-    toolsLayout->addWidget(createHLine());
-    toolsLayout->addWidget(new QLabel(tr("Page type:")));
-    toolsLayout->addWidget(mPageTypeCombo);
-    toolsLayout->addWidget(new QLabel(tr("Spacing:")));
-    toolsLayout->addWidget(mSpacing);
-    toolsLayout->addStretch(0);
-    toolsLayout->addWidget(aboutButton);
+    // TODO: splitter width
 
     // Create the splitter
     QSplitter *splitter = new QSplitter;
     splitter->addWidget(graphicsView);
-    splitter->addWidget(mTabWidget);
+    splitter->addWidget(mSheetWidget);
 
-    // Create the layout that separates the tabs and buttons
+    // Create the vbox layout for the buttons
+    QVBoxLayout *vboxLayout = new QVBoxLayout;
+    vboxLayout->addWidget(printButton);
+    vboxLayout->addWidget(aboutButton);
+    vboxLayout->addStretch(0);
+
+    // Create the layout
     QHBoxLayout *hboxLayout = new QHBoxLayout;
     hboxLayout->addWidget(splitter);
-    hboxLayout->addLayout(toolsLayout);
+    hboxLayout->addLayout(vboxLayout);
 
-    // Create the central widget and layout
+    // Create the central widget
     QWidget *widget = new QWidget;
-    QVBoxLayout *vboxLayout = new QVBoxLayout;
-    vboxLayout->setSpacing(10);
-    vboxLayout->addLayout(hboxLayout);
-    widget->setLayout(vboxLayout);
+    widget->setLayout(hboxLayout);
     setCentralWidget(widget);
 
-    // Setup the window
-    setStyleSheet("QPushButton { padding: 8px 16px; }");
+    // Initialize window properties
     setWindowIcon(QIcon(":/img/box-labeler.png"));
     setWindowTitle(tr("Box Labeler"));
     resize(1024, 480);
     move(QApplication::desktop()->availableGeometry().center() - rect().center());
 
-    // Simulate the addition of a new tab
-    newTabButton->click();
-
     // Redraw the preview
-    redraw();
-}
-
-void MainWindow::redraw()
-{
-    // Retrieve the current tab
-    QWidget *widget = mTabWidget->currentWidget();
-    if (!widget) {
-        return;
-    }
-
-    // Calculate the page size in pixels at 36dpi
-    PageType pageType = gPageTypes.value(mPageTypeCombo->currentIndex());
-    QRect pageRect = pageType.size.rectPixels(36);
-    if (pageType.orientation == QPrinter::Landscape) {
-        pageRect = pageRect.transposed();
-    }
-
-    // Create an image of the specified size and render it
-    QPixmap pixmap(pageRect.width(), pageRect.height());
-    pixmap.fill();
-
-    PageWidget *pageWidget = qobject_cast<PageWidget*>(widget);
-    if (pageWidget) {
-        pageWidget->draw(
-            &pixmap,
-            mFont,
-            pageRect,
-            mSpacing->value()
-        );
-    }
-
-    // Show the image
-    mGraphicsPixmapItem->setPixmap(pixmap);
+    mSheetWidget->changed();
 }
 
 void MainWindow::onPrintClicked()
 {
-    PageType pageType = gPageTypes.value(mPageTypeCombo->currentIndex());
-
-    // Initialize the printer
-    QPrinter printer(QPrinter::HighResolution);
-    printer.setPageSize(pageType.size);
-    printer.setOrientation(pageType.orientation);
-
-    // Show the print dialog
-    QPrintDialog printDialog(&printer);
-    if (printDialog.exec() == QDialog::Accepted) {
-
-        // Print each page
-        for (int n = 0; n < mTabWidget->count() - 1; ++n) {
-
-            // Have the widget draw the page
-            qobject_cast<PageWidget*>(mTabWidget->widget(n))->draw(
-                &printer,
-                mFont,
-                printer.pageRect(),
-                mSpacing->value()
-            );
-
-            // Advance to the next page if applicable
-            if (n < mTabWidget->count() - 2) {
-                printer.newPage();
-            }
-        }
-    }
-}
-
-void MainWindow::toggleTools()
-{
-    mPrintButton->setEnabled(mTabWidget->count() > 1);
-}
-
-QWidget *MainWindow::createHLine()
-{
-    QFrame *frame = new QFrame;
-    frame->setFrameShape(QFrame::HLine);
-    frame->setFrameShadow(QFrame::Sunken);
-    return frame;
+    //...
 }

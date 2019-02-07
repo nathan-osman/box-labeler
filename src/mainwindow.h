@@ -25,14 +25,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QComboBox>
-#include <QFont>
-#include <QGraphicsPixmapItem>
 #include <QMainWindow>
-#include <QPushButton>
-#include <QSpinBox>
-#include <QTabWidget>
-#include <QWidget>
+
+class SheetWidget;
 
 class MainWindow : public QMainWindow
 {
@@ -44,22 +39,11 @@ public:
 
 private slots:
 
-    void redraw();
     void onPrintClicked();
 
 private:
 
-    void toggleTools();
-    QWidget *createHLine();
-
-    QGraphicsPixmapItem *mGraphicsPixmapItem;
-
-    QTabWidget *mTabWidget;
-    QPushButton *mPrintButton;
-    QComboBox *mPageTypeCombo;
-    QSpinBox *mSpacing;
-
-    QFont mFont;
+    SheetWidget *mSheetWidget;
 };
 
 #endif // MAINWINDOW_H

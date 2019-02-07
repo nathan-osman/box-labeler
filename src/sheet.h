@@ -60,14 +60,14 @@ public:
     int hSpacing;
     int vSpacing;
 
-    void draw(QPaintDevice *device, const QRectF &rect);
+    void draw(QPaintDevice *device, const QRectF &rect) const;
 
 private:
 
     void fitText(QPainter &painter,
                  const QFont &font,
                  const QRectF &rect,
-                 const QString &text);
+                 const QString &text) const;
 };
 
 #endif // SHEET_H

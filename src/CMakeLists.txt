@@ -6,12 +6,12 @@ set(SRC
     mainwindow.cpp
     multilinedelegate.h
     multilinedelegate.cpp
-    pagewidget.h
-    pagewidget.cpp
     resource.qrc
     resource.rc
     sheet.h
     sheet.cpp
+    sheetwidget.h
+    sheetwidget.cpp
 )
 
 add_executable(box-labeler WIN32 ${SRC})

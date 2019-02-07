@@ -31,9 +31,11 @@ Sheet::Sheet()
       hSpacing(0),
       vSpacing(0)
 {
+    font.setBold(true);
+    font.setFamily("Calibri");
 }
 
-void Sheet::draw(QPaintDevice *device, const QRectF &rect)
+void Sheet::draw(QPaintDevice *device, const QRectF &rect) const
 {
     bool hasHeader = !headerText.isEmpty();
     bool hasFooter = !footerText.isEmpty();
@@ -101,7 +103,7 @@ void Sheet::draw(QPaintDevice *device, const QRectF &rect)
 void Sheet::fitText(QPainter &painter,
                     const QFont &font,
                     const QRectF &rect,
-                    const QString &text)
+                    const QString &text) const
 {
     QFont trialFont = font;
 
