@@ -25,6 +25,7 @@
 #include <QApplication>
 #include <QBrush>
 #include <QDesktopWidget>
+#include <QFrame>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
 #include <QGraphicsView>
@@ -33,16 +34,21 @@
 #include <QMessageBox>
 #include <QPageSize>
 #include <QPixmap>
+#include <QPrintDialog>
+#include <QPrinter>
 #include <QPushButton>
 #include <QRect>
 #include <QSplitter>
 #include <QVBoxLayout>
 
 #include "mainwindow.h"
+#include "printtask.h"
+#include "queuewidget.h"
 #include "sheetwidget.h"
 
 MainWindow::MainWindow()
-    : mSheetWidget(new SheetWidget)
+    : mSheetWidget(new SheetWidget),
+      mQueueWidget(new QueueWidget)
 {
     // Create the graphics scene and view
     QGraphicsPixmapItem *graphicsPixmapItem = new QGraphicsPixmapItem;
@@ -57,6 +63,11 @@ MainWindow::MainWindow()
         // Create the rect (at 36 DPI)
         QRect pageRect = QPageSize(QPageSize::Letter).rectPixels(36);
 
+        // Transpose dimensions for landscape
+        if (mSheetWidget->sheet().orientation == Sheet::Landscape) {
+            pageRect = pageRect.transposed();
+        }
+
         // Create the pixmap
         QPixmap pixmap(pageRect.width(), pageRect.height());
         pixmap.fill();
@@ -66,10 +77,20 @@ MainWindow::MainWindow()
         graphicsPixmapItem->setPixmap(pixmap);
     });
 
+    // Create the vertical line
+    QFrame *frame = new QFrame;
+    frame->setFrameShape(QFrame::VLine);
+    frame->setFrameShadow(QFrame::Sunken);
+
     // Create the print button
     QPushButton *printButton = new QPushButton(tr("&Print"));
     printButton->setIcon(QIcon(":/img/print.png"));
     connect(printButton, &QPushButton::clicked, this, &MainWindow::onPrintClicked);
+
+    // Create the clear button
+    QPushButton *clearButton = new QPushButton(tr("&Clear"));
+    clearButton->setIcon(QIcon(":/img/clear.png"));
+    connect(clearButton, &QPushButton::clicked, mSheetWidget, &SheetWidget::clear);
 
     // Create the about button
     QPushButton *aboutButton = new QPushButton(tr("&About..."));
@@ -86,18 +107,23 @@ MainWindow::MainWindow()
 
     // Create the splitter
     QSplitter *splitter = new QSplitter;
+    splitter->setHandleWidth(16);
     splitter->addWidget(graphicsView);
     splitter->addWidget(mSheetWidget);
 
     // Create the vbox layout for the buttons
     QVBoxLayout *vboxLayout = new QVBoxLayout;
     vboxLayout->addWidget(printButton);
+    vboxLayout->addWidget(clearButton);
+    vboxLayout->addStretch();
+    vboxLayout->addWidget(mQueueWidget);
     vboxLayout->addWidget(aboutButton);
-    vboxLayout->addStretch(0);
 
     // Create the layout
     QHBoxLayout *hboxLayout = new QHBoxLayout;
-    hboxLayout->addWidget(splitter);
+    hboxLayout->setSpacing(16);
+    hboxLayout->addWidget(splitter, 1);
+    hboxLayout->addWidget(frame);
     hboxLayout->addLayout(vboxLayout);
 
     // Create the central widget
@@ -106,6 +132,7 @@ MainWindow::MainWindow()
     setCentralWidget(widget);
 
     // Initialize window properties
+    setStyleSheet("QPushButton { padding: 8px 16px; }");
     setWindowIcon(QIcon(":/img/box-labeler.png"));
     setWindowTitle(tr("Box Labeler"));
     resize(1024, 480);
@@ -117,5 +144,11 @@ MainWindow::MainWindow()
 
 void MainWindow::onPrintClicked()
 {
-    //...
+    QPrinter printer(QPrinter::HighResolution);
+    QPrintDialog printDialog(&printer);
+    if (printDialog.exec() == QDialog::Accepted) {
+        mQueueWidget->addTask(
+            new PrintTask(printer.printerName(), mSheetWidget->sheet())
+        );
+    }
 }

@@ -22,48 +22,36 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef SHEETWIDGET_H
-#define SHEETWIDGET_H
+#ifndef PRINTTASK_H
+#define PRINTTASK_H
 
-#include <QComboBox>
-#include <QLineEdit>
-#include <QSpinBox>
-#include <QWidget>
+#include <QObject>
 
 #include "sheet.h"
 
 /**
- * @brief Widget for editing a sheet
+ * @brief Task for printing a sheet on a printer
  */
-class SheetWidget : public QWidget
+class PrintTask : public QObject
 {
     Q_OBJECT
 
 public:
 
-    SheetWidget();
-
-    Sheet &sheet();
+    PrintTask(const QString &printerName, const Sheet &sheet);
 
 signals:
 
-    void changed();
+    void finished();
 
 public slots:
 
-    void clear();
+    void print();
 
 private:
 
+    QString mPrinterName;
     Sheet mSheet;
-
-    QLineEdit *mHeaderEdit;
-    QLineEdit *mFooterEdit;
-
-    QSpinBox *mRowSpinBox;
-    QSpinBox *mColSpinBox;
-
-    QComboBox *mComboBox;
 };
 
-#endif // SHEETWIDGET_H
+#endif // PRINTTASK_H

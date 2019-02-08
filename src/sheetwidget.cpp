@@ -24,8 +24,6 @@
 
 #include <QHeaderView>
 #include <QLabel>
-#include <QLineEdit>
-#include <QSpinBox>
 #include <QTableWidget>
 #include <QTableWidgetItem>
 #include <QVBoxLayout>
@@ -37,15 +35,17 @@ const int DefaultRows = 2;
 const int DefaultCols = 2;
 
 SheetWidget::SheetWidget()
+    : mHeaderEdit(new QLineEdit),
+      mFooterEdit(new QLineEdit),
+      mRowSpinBox(new QSpinBox),
+      mColSpinBox(new QSpinBox),
+      mComboBox(new QComboBox)
 {
-    // Create the header and footer line edits
-    QLineEdit *headerEdit = new QLineEdit;
-    QLineEdit *footerEdit = new QLineEdit;
-    connect(headerEdit, &QLineEdit::textChanged, [this](const QString &text) {
+    connect(mHeaderEdit, &QLineEdit::textChanged, [this](const QString &text) {
         mSheet.headerText = text;
         emit changed();
     });
-    connect(footerEdit, &QLineEdit::textChanged, [this](const QString &text) {
+    connect(mFooterEdit, &QLineEdit::textChanged, [this](const QString &text) {
         mSheet.footerText = text;
         emit changed();
     });
@@ -62,38 +62,61 @@ SheetWidget::SheetWidget()
     });
 
     // Create the spinners for the table dimensions
-    QSpinBox *rowSpinBox = new QSpinBox;
-    QSpinBox *colSpinBox = new QSpinBox;
-    connect(rowSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this, tableWidget](int val) {
+    connect(mRowSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this, tableWidget](int val) {
         mSheet.setRows(val);
         tableWidget->setRowCount(val);
         emit changed();
     });
-    connect(colSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this, tableWidget](int val) {
+    connect(mColSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this, tableWidget](int val) {
         mSheet.setCols(val);
         tableWidget->setColumnCount(val);
         emit changed();
     });
-    rowSpinBox->setValue(DefaultRows);
-    colSpinBox->setValue(DefaultCols);
+
+    // Create the combo box for page orientation
+    mComboBox->addItem(tr("Portrait"), Sheet::Portrait);
+    mComboBox->addItem(tr("Landscape"), Sheet::Landscape);
+    connect(mComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), [this]() {
+        mSheet.orientation = mComboBox->currentData().toInt();
+        emit changed();
+    });
 
     // Add everything to the layout
     QVBoxLayout *vboxLayout = new QVBoxLayout;
     vboxLayout->setMargin(0);
     vboxLayout->addWidget(new QLabel(tr("Header:")));
-    vboxLayout->addWidget(headerEdit);
+    vboxLayout->addWidget(mHeaderEdit);
     vboxLayout->addWidget(new QLabel(tr("Footer:")));
-    vboxLayout->addWidget(footerEdit);
+    vboxLayout->addWidget(mFooterEdit);
     vboxLayout->addWidget(new QLabel(tr("Cells:")));
     vboxLayout->addWidget(tableWidget);
     vboxLayout->addWidget(new QLabel(tr("Rows:")));
-    vboxLayout->addWidget(rowSpinBox);
+    vboxLayout->addWidget(mRowSpinBox);
     vboxLayout->addWidget(new QLabel(tr("Columns:")));
-    vboxLayout->addWidget(colSpinBox);
+    vboxLayout->addWidget(mColSpinBox);
+    vboxLayout->addWidget(new QLabel(tr("Orientation:")));
+    vboxLayout->addWidget(mComboBox);
     setLayout(vboxLayout);
+
+    // Reset everything
+    clear();
 }
 
 Sheet &SheetWidget::sheet()
 {
     return mSheet;
+}
+
+void SheetWidget::clear()
+{
+    mHeaderEdit->clear();
+    mFooterEdit->clear();
+
+    // Trick to clear the table
+    mRowSpinBox->setValue(0);
+
+    mRowSpinBox->setValue(DefaultRows);
+    mColSpinBox->setValue(DefaultCols);
+
+    mComboBox->setCurrentIndex(Sheet::Landscape);
 }

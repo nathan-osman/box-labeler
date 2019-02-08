@@ -3,8 +3,8 @@
 APP_ICON ICON DISCARDABLE "box-labeler.ico"
 
 VS_VERSION_INFO VERSIONINFO
-    FILEVERSION    0, 2, 0, 0
-    PRODUCTVERSION 0, 2, 0, 0
+    FILEVERSION    0, 3, 0, 0
+    PRODUCTVERSION 0, 3, 0, 0
 {
     BLOCK "StringFileInfo"
     {
@@ -12,12 +12,12 @@ VS_VERSION_INFO VERSIONINFO
         {
             VALUE "CompanyName",      "Nathan Osman\0"
             VALUE "FileDescription",  "Box label printer\0"
-            VALUE "FileVersion",      "0.2.0\0"
+            VALUE "FileVersion",      "0.3.0\0"
             VALUE "InternalName",     "Box Labeler\0"
-            VALUE "LegalCopyright",   "Copyright (c) 2018 Nathan Osman\0"
+            VALUE "LegalCopyright",   "Copyright (c) 2019 Nathan Osman\0"
             VALUE "OriginalFilename", "box-labeler.exe\0"
             VALUE "ProductName",      "Box Labeler\0"
-            VALUE "ProductVersion",   "0.2.0\0"
+            VALUE "ProductVersion",   "0.3.0\0"
         }
     }
     BLOCK "VarFileInfo"

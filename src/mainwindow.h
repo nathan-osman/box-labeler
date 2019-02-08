@@ -27,6 +27,7 @@
 
 #include <QMainWindow>
 
+class QueueWidget;
 class SheetWidget;
 
 class MainWindow : public QMainWindow
@@ -44,6 +45,7 @@ private slots:
 private:
 
     SheetWidget *mSheetWidget;
+    QueueWidget *mQueueWidget;
 };
 
 #endif // MAINWINDOW_H

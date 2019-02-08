@@ -6,6 +6,10 @@ set(SRC
     mainwindow.cpp
     multilinedelegate.h
     multilinedelegate.cpp
+    printtask.h
+    printtask.cpp
+    queuewidget.h
+    queuewidget.cpp
     resource.qrc
     resource.rc
     sheet.h

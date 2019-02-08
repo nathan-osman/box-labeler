@@ -22,48 +22,33 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef SHEETWIDGET_H
-#define SHEETWIDGET_H
+#include <QPageSize>
+#include <QPrinter>
+#include <QPrinterInfo>
 
-#include <QComboBox>
-#include <QLineEdit>
-#include <QSpinBox>
-#include <QWidget>
+#include "printtask.h"
 
-#include "sheet.h"
-
-/**
- * @brief Widget for editing a sheet
- */
-class SheetWidget : public QWidget
+PrintTask::PrintTask(const QString &printerName, const Sheet &sheet)
+    : mPrinterName(printerName),
+      mSheet(sheet)
 {
-    Q_OBJECT
+}
 
-public:
+void PrintTask::print()
+{
+    // Find the printer and initialize it
+    QPrinter printer(QPrinterInfo::printerInfo(mPrinterName), QPrinter::HighResolution);
+    printer.setDocName(tr("Box Labeler"));
+    printer.setPageSize(QPageSize(QPageSize::Letter));
 
-    SheetWidget();
+    // Adjust for landscape if necessary
+    if (mSheet.orientation == Sheet::Landscape) {
+        printer.setOrientation(QPrinter::Landscape);
+    }
 
-    Sheet &sheet();
+    // Draw the page
+    mSheet.draw(&printer, printer.pageRect());
 
-signals:
-
-    void changed();
-
-public slots:
-
-    void clear();
-
-private:
-
-    Sheet mSheet;
-
-    QLineEdit *mHeaderEdit;
-    QLineEdit *mFooterEdit;
-
-    QSpinBox *mRowSpinBox;
-    QSpinBox *mColSpinBox;
-
-    QComboBox *mComboBox;
-};
-
-#endif // SHEETWIDGET_H
+    // Signal completion
+    emit finished();
+}

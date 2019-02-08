@@ -22,56 +22,59 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef SHEET_H
-#define SHEET_H
-
 #include <QFont>
-#include <QPaintDevice>
-#include <QPainter>
-#include <QRectF>
-#include <QString>
-#include <QVector>
+#include <QHBoxLayout>
 
-#include "cell.h"
+#include "printtask.h"
+#include "queuewidget.h"
 
-/**
- * @brief Sheet containing cells
- */
-class Sheet
+QueueWidget::QueueWidget()
+    : mStatusLabel(new QLabel),
+      mQueueLength(0)
 {
-public:
+    // Initialize the label
+    QLabel *label = new QLabel(tr("Status:"));
+    label->setStyleSheet("font-weight: bold;");
 
-    enum {
-        Portrait,
-        Landscape
-    };
+    // Create the layout
+    QHBoxLayout *hboxLayout = new QHBoxLayout;
+    hboxLayout->setMargin(0);
+    hboxLayout->addWidget(label);
+    hboxLayout->addWidget(mStatusLabel, 1);
+    setLayout(hboxLayout);
 
-    Sheet();
+    // Start the thread
+    mThread.start();
 
-    QString headerText;
-    QString footerText;
+    // Update the label
+    updateLabel();
+}
 
-    QFont font;
+QueueWidget::~QueueWidget()
+{
+    mThread.quit();
+    mThread.wait();
+}
 
-    int orientation;
+void QueueWidget::addTask(PrintTask *task)
+{
+    // Update the queue length
+    ++mQueueLength;
+    updateLabel();
 
-    int hSpacing;
-    int vSpacing;
+    task->moveToThread(&mThread);
+    connect(task, &PrintTask::finished, this, [this, task]() {
+        delete task;
+        --mQueueLength;
+        updateLabel();
+    });
+    QMetaObject::invokeMethod(task, &PrintTask::print, Qt::QueuedConnection);
+}
 
-    Cell &cell(int row, int col);
-    void setRows(int rows);
-    void setCols(int cols);
+void QueueWidget::updateLabel()
+{
+    mStatusLabel->setText(
+        mQueueLength ? tr("%1 in queue").arg(mQueueLength) : tr("idle")
+    );
+}
 
-    void draw(QPaintDevice *device, const QRectF &rect);
-
-private:
-
-    void fitText(QPainter &painter,
-                 const QRectF &rect,
-                 const QString &text) const;
-
-    int mColCount;
-    QVector<QVector<Cell>> mCells;
-};
-
-#endif // SHEET_H
