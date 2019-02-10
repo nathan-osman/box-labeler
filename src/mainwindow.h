@@ -40,12 +40,14 @@ public:
 
 private slots:
 
-    void onPrintClicked();
+    bool onSelectPrinterClicked();
 
 private:
 
     SheetWidget *mSheetWidget;
     QueueWidget *mQueueWidget;
+
+    QString mPrinterName;
 };
 
 #endif // MAINWINDOW_H

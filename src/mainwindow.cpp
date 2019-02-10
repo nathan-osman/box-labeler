@@ -82,10 +82,21 @@ MainWindow::MainWindow()
     frame->setFrameShape(QFrame::VLine);
     frame->setFrameShadow(QFrame::Sunken);
 
+    // Create the Select Printer button
+    QPushButton *selectPrinterButton = new QPushButton(tr("&Select Printer..."));
+    selectPrinterButton->setIcon(QIcon(":/img/preferences.png"));
+    connect(selectPrinterButton, &QPushButton::clicked, this, &MainWindow::onSelectPrinterClicked);
+
     // Create the print button
     QPushButton *printButton = new QPushButton(tr("&Print"));
     printButton->setIcon(QIcon(":/img/print.png"));
-    connect(printButton, &QPushButton::clicked, this, &MainWindow::onPrintClicked);
+    connect(printButton, &QPushButton::clicked, [this]() {
+        if (!mPrinterName.isEmpty() || onSelectPrinterClicked()) {
+            mQueueWidget->addTask(
+                new PrintTask(mPrinterName, mSheetWidget->sheet())
+            );
+        }
+    });
 
     // Create the clear button
     QPushButton *clearButton = new QPushButton(tr("&Clear"));
@@ -113,6 +124,7 @@ MainWindow::MainWindow()
 
     // Create the vbox layout for the buttons
     QVBoxLayout *vboxLayout = new QVBoxLayout;
+    vboxLayout->addWidget(selectPrinterButton);
     vboxLayout->addWidget(printButton);
     vboxLayout->addWidget(clearButton);
     vboxLayout->addStretch();
@@ -142,13 +154,13 @@ MainWindow::MainWindow()
     mSheetWidget->changed();
 }
 
-void MainWindow::onPrintClicked()
+bool MainWindow::onSelectPrinterClicked()
 {
     QPrinter printer(QPrinter::HighResolution);
     QPrintDialog printDialog(&printer);
     if (printDialog.exec() == QDialog::Accepted) {
-        mQueueWidget->addTask(
-            new PrintTask(printer.printerName(), mSheetWidget->sheet())
-        );
+        mPrinterName = printer.printerName();
+        return true;
     }
+    return false;
 }
