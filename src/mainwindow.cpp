@@ -59,7 +59,7 @@ MainWindow::MainWindow()
     graphicsView->setBackgroundBrush(QBrush(Qt::gray));
 
     // Draw the preview when the widget changes
-    connect(mSheetWidget, &SheetWidget::changed, [this, graphicsPixmapItem]() {
+    connect(mSheetWidget, &SheetWidget::changed, [this, graphicsScene, graphicsPixmapItem]() {
 
         // Create the rect (at 36 DPI)
         QRect pageRect = QPageSize(QPageSize::Letter).rectPixels(36);
@@ -76,6 +76,7 @@ MainWindow::MainWindow()
         // Draw the contents and display it
         mSheetWidget->sheet().draw(&pixmap, pageRect);
         graphicsPixmapItem->setPixmap(pixmap);
+        graphicsScene->setSceneRect(pageRect);
     });
 
     // Create the vertical line
