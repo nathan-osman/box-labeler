@@ -41,6 +41,7 @@ public:
 private slots:
 
     bool onSelectPrinterClicked();
+    bool onPrintClicked();
 
 private:
 
