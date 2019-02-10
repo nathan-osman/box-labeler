@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.2.0 FATAL_ERROR)
 project(box-labeler)
 
+set(PROJECT_VERSION_MAJOR 0)
+set(PROJECT_VERSION_MINOR 3)
+set(PROJECT_VERSION_PATCH 1)
+set(PROJECT_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
+
 find_package(Qt5PrintSupport 5.7 REQUIRED)
 find_package(Qt5Widgets 5.7 REQUIRED)
 

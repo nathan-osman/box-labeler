@@ -41,6 +41,7 @@
 #include <QSplitter>
 #include <QVBoxLayout>
 
+#include "config.h"
 #include "mainwindow.h"
 #include "printtask.h"
 #include "queuewidget.h"
@@ -113,7 +114,7 @@ MainWindow::MainWindow()
         QMessageBox::information(
             this,
             tr("About"),
-            tr("Box Labeler\n\nCopyright 2019 - Nathan Osman")
+            tr("Box Labeler %1\n\nCopyright 2019 - Nathan Osman").arg(PROJECT_VERSION)
         );
     });
 
