@@ -63,6 +63,9 @@ private:
     QSpinBox *mRowSpinBox;
     QSpinBox *mColSpinBox;
 
+    QSpinBox *mHSpacingSpinBox;
+    QSpinBox *mVSpacingSpinBox;
+
     QComboBox *mComboBox;
 };
 

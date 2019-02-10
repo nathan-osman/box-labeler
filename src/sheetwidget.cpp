@@ -22,11 +22,11 @@
  * IN THE SOFTWARE.
  */
 
+#include <QGridLayout>
 #include <QHeaderView>
 #include <QLabel>
 #include <QTableWidget>
 #include <QTableWidgetItem>
-#include <QVBoxLayout>
 
 #include "multilinedelegate.h"
 #include "sheetwidget.h"
@@ -34,11 +34,16 @@
 const int DefaultRows = 2;
 const int DefaultCols = 2;
 
+const int DefaultHSpacing = 20;
+const int DefaultVSpacing = 0;
+
 SheetWidget::SheetWidget()
     : mHeaderEdit(new QLineEdit),
       mFooterEdit(new QLineEdit),
       mRowSpinBox(new QSpinBox),
       mColSpinBox(new QSpinBox),
+      mHSpacingSpinBox(new QSpinBox),
+      mVSpacingSpinBox(new QSpinBox),
       mComboBox(new QComboBox)
 {
     connect(mHeaderEdit, &QLineEdit::textChanged, [this](const QString &text) {
@@ -73,6 +78,16 @@ SheetWidget::SheetWidget()
         emit changed();
     });
 
+    // Create the spinners for spacing
+    connect(mHSpacingSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this](int val) {
+        mSheet.hSpacing = val;
+        emit changed();
+    });
+    connect(mVSpacingSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this](int val) {
+        mSheet.vSpacing = val;
+        emit changed();
+    });
+
     // Create the combo box for page orientation
     mComboBox->addItem(tr("Portrait"), Sheet::Portrait);
     mComboBox->addItem(tr("Landscape"), Sheet::Landscape);
@@ -82,21 +97,25 @@ SheetWidget::SheetWidget()
     });
 
     // Add everything to the layout
-    QVBoxLayout *vboxLayout = new QVBoxLayout;
-    vboxLayout->setMargin(0);
-    vboxLayout->addWidget(new QLabel(tr("Header:")));
-    vboxLayout->addWidget(mHeaderEdit);
-    vboxLayout->addWidget(new QLabel(tr("Footer:")));
-    vboxLayout->addWidget(mFooterEdit);
-    vboxLayout->addWidget(new QLabel(tr("Cells:")));
-    vboxLayout->addWidget(tableWidget);
-    vboxLayout->addWidget(new QLabel(tr("Rows:")));
-    vboxLayout->addWidget(mRowSpinBox);
-    vboxLayout->addWidget(new QLabel(tr("Columns:")));
-    vboxLayout->addWidget(mColSpinBox);
-    vboxLayout->addWidget(new QLabel(tr("Orientation:")));
-    vboxLayout->addWidget(mComboBox);
-    setLayout(vboxLayout);
+    QGridLayout *gridLayout = new QGridLayout;
+    gridLayout->setMargin(0);
+    gridLayout->addWidget(new QLabel(tr("Header:")), 0, 0, 1, 2);
+    gridLayout->addWidget(mHeaderEdit, 1, 0, 1, 2);
+    gridLayout->addWidget(new QLabel(tr("Footer:")), 2, 0, 1, 2);
+    gridLayout->addWidget(mFooterEdit, 3, 0, 1, 2);
+    gridLayout->addWidget(new QLabel(tr("Cells:")), 4, 0, 1, 2);
+    gridLayout->addWidget(tableWidget, 5, 0, 1, 2);
+    gridLayout->addWidget(new QLabel(tr("Rows:")), 6, 0, 1, 1);
+    gridLayout->addWidget(mRowSpinBox, 7, 0, 1, 1);
+    gridLayout->addWidget(new QLabel(tr("Columns:")), 6, 1, 1, 1);
+    gridLayout->addWidget(mColSpinBox, 7, 1, 1, 1);
+    gridLayout->addWidget(new QLabel(tr("Horizontal Spacing:")), 8, 0, 1, 1);
+    gridLayout->addWidget(mHSpacingSpinBox, 9, 0, 1, 1);
+    gridLayout->addWidget(new QLabel(tr("Vertical Spacing:")), 8, 1, 1, 1);
+    gridLayout->addWidget(mVSpacingSpinBox, 9, 1, 1, 1);
+    gridLayout->addWidget(new QLabel(tr("Orientation:")), 10, 0, 1, 2);
+    gridLayout->addWidget(mComboBox, 11, 0, 1, 2);
+    setLayout(gridLayout);
 
     // Reset everything
     clear();
@@ -117,6 +136,9 @@ void SheetWidget::clear()
 
     mRowSpinBox->setValue(DefaultRows);
     mColSpinBox->setValue(DefaultCols);
+
+    mHSpacingSpinBox->setValue(DefaultHSpacing);
+    mVSpacingSpinBox->setValue(DefaultVSpacing);
 
     mComboBox->setCurrentIndex(Sheet::Landscape);
 }
