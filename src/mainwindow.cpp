@@ -25,6 +25,7 @@
 #include <QApplication>
 #include <QBrush>
 #include <QDesktopWidget>
+#include <QFontDialog>
 #include <QFrame>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
@@ -80,17 +81,13 @@ MainWindow::MainWindow()
     });
 
     // Create the vertical line
-    QFrame *frame = new QFrame;
-    frame->setFrameShape(QFrame::VLine);
-    frame->setFrameShadow(QFrame::Sunken);
-
-    // Create the Select Printer button
-    QPushButton *selectPrinterButton = new QPushButton(tr("&Select Printer..."));
-    selectPrinterButton->setIcon(QIcon(":/img/preferences.png"));
-    connect(selectPrinterButton, &QPushButton::clicked, this, &MainWindow::onSelectPrinterClicked);
+    QFrame *vFrame = new QFrame;
+    vFrame->setFrameShape(QFrame::VLine);
+    vFrame->setFrameShadow(QFrame::Sunken);
 
     // Create the print button
     QPushButton *printButton = new QPushButton(tr("&Print"));
+    printButton->setDefault(true);
     printButton->setIcon(QIcon(":/img/print.png"));
     connect(printButton, &QPushButton::clicked, this, &MainWindow::onPrintClicked);
 
@@ -107,6 +104,26 @@ MainWindow::MainWindow()
     QPushButton *clearButton = new QPushButton(tr("&Clear"));
     clearButton->setIcon(QIcon(":/img/clear.png"));
     connect(clearButton, &QPushButton::clicked, mSheetWidget, &SheetWidget::clear);
+
+    // Create the horizontal line
+    QFrame *hFrame = new QFrame;
+    hFrame->setFrameShape(QFrame::HLine);
+    hFrame->setFrameShadow(QFrame::Sunken);
+
+    // Create the Select Printer button
+    QPushButton *selectPrinterButton = new QPushButton(tr("&Select Printer..."));
+    selectPrinterButton->setIcon(QIcon(":/img/preferences.png"));
+    connect(selectPrinterButton, &QPushButton::clicked, this, &MainWindow::onSelectPrinterClicked);
+
+    // Create the Select Font button
+    QPushButton *selectFontButton = new QPushButton(tr("Select &Font..."));
+    selectFontButton->setIcon(QIcon(":/img/font.png"));
+    connect(selectFontButton, &QPushButton::clicked, [this]() {
+        mSheetWidget->sheet().font = QFontDialog::getFont(
+            nullptr, mSheetWidget->sheet().font
+        );
+        emit mSheetWidget->changed();
+    });
 
     // Create the about button
     QPushButton *aboutButton = new QPushButton(tr("&About..."));
@@ -129,10 +146,12 @@ MainWindow::MainWindow()
 
     // Create the vbox layout for the buttons
     QVBoxLayout *vboxLayout = new QVBoxLayout;
-    vboxLayout->addWidget(selectPrinterButton);
     vboxLayout->addWidget(printButton);
     vboxLayout->addWidget(printAndClearButton);
     vboxLayout->addWidget(clearButton);
+    vboxLayout->addWidget(hFrame);
+    vboxLayout->addWidget(selectPrinterButton);
+    vboxLayout->addWidget(selectFontButton);
     vboxLayout->addStretch();
     vboxLayout->addWidget(mQueueWidget);
     vboxLayout->addWidget(aboutButton);
@@ -141,7 +160,7 @@ MainWindow::MainWindow()
     QHBoxLayout *hboxLayout = new QHBoxLayout;
     hboxLayout->setSpacing(16);
     hboxLayout->addWidget(splitter, 1);
-    hboxLayout->addWidget(frame);
+    hboxLayout->addWidget(vFrame);
     hboxLayout->addLayout(vboxLayout);
 
     // Create the central widget
