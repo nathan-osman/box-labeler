@@ -31,11 +31,14 @@
 #include "multilinedelegate.h"
 #include "sheetwidget.h"
 
-const int DefaultRows = 2;
-const int DefaultCols = 2;
+const int DefaultRows = 1;
+const int DefaultCols = 1;
 
 const int DefaultHSpacing = 20;
 const int DefaultVSpacing = 0;
+
+const int DefaultBorder = 4;
+const int DefaultMargin = 0;
 
 SheetWidget::SheetWidget()
     : mHeaderEdit(new QLineEdit),
@@ -44,7 +47,9 @@ SheetWidget::SheetWidget()
       mColSpinBox(new QSpinBox),
       mHSpacingSpinBox(new QSpinBox),
       mVSpacingSpinBox(new QSpinBox),
-      mComboBox(new QComboBox)
+      mComboBox(new QComboBox),
+      mBorderSpinBox(new QSpinBox),
+      mMarginSpinBox(new QSpinBox)
 {
     connect(mHeaderEdit, &QLineEdit::textChanged, [this](const QString &text) {
         mSheet.headerText = text;
@@ -96,6 +101,16 @@ SheetWidget::SheetWidget()
         emit changed();
     });
 
+    // Create the combo box for border and margin
+    connect(mBorderSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this](int val) {
+        mSheet.border = val;
+        emit changed();
+    });
+    connect(mMarginSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this](int val) {
+        mSheet.margin = val;
+        emit changed();
+    });
+
     // Add everything to the layout
     QGridLayout *gridLayout = new QGridLayout;
     gridLayout->setMargin(0);
@@ -115,6 +130,10 @@ SheetWidget::SheetWidget()
     gridLayout->addWidget(mVSpacingSpinBox, 9, 1, 1, 1);
     gridLayout->addWidget(new QLabel(tr("Orientation:")), 10, 0, 1, 2);
     gridLayout->addWidget(mComboBox, 11, 0, 1, 2);
+    gridLayout->addWidget(new QLabel(tr("Border:")), 12, 0, 1, 1);
+    gridLayout->addWidget(mBorderSpinBox, 13, 0, 1, 1);
+    gridLayout->addWidget(new QLabel(tr("Margin:")), 12, 1, 1, 1);
+    gridLayout->addWidget(mMarginSpinBox, 13, 1, 1, 1);
     setLayout(gridLayout);
 
     // Reset everything
@@ -141,4 +160,7 @@ void SheetWidget::clear()
     mVSpacingSpinBox->setValue(DefaultVSpacing);
 
     mComboBox->setCurrentIndex(Sheet::Landscape);
+
+    mBorderSpinBox->setValue(DefaultBorder);
+    mMarginSpinBox->setValue(DefaultMargin);
 }

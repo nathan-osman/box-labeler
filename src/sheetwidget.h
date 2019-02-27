@@ -67,6 +67,9 @@ private:
     QSpinBox *mVSpacingSpinBox;
 
     QComboBox *mComboBox;
+
+    QSpinBox *mBorderSpinBox;
+    QSpinBox *mMarginSpinBox;
 };
 
 #endif // SHEETWIDGET_H

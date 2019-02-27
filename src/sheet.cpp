@@ -22,12 +22,17 @@
  * IN THE SOFTWARE.
  */
 
+#include <QMargins>
+#include <QPen>
+
 #include "sheet.h"
 
 Sheet::Sheet()
     : orientation(Portrait),
       hSpacing(0),
       vSpacing(0),
+      border(0),
+      margin(0),
       mColCount(0)
 {
     font.setBold(true);
@@ -64,23 +69,38 @@ void Sheet::draw(QPaintDevice *device, const QRectF &rect)
         return;
     }
 
+    // Calculate the border and client rect
+    QRectF borderRect = rect - QMargins(border / 2, border / 2, border / 2, border / 2);
+    QRectF clientRect = rect - QMargins(margin, margin, margin, margin);
+
     // Calculate the number of rows being drawn
     int rowCount = mCells.count() + (hasHeader ? 1 : 0) + (hasFooter ? 1 : 0);
 
     // Calculate the cell width and height, taking spacing into account
-    qreal vOffset = rect.top();
-    qreal cellWidth = (rect.width() - hSpacing * (mColCount - 1)) / mColCount;
-    qreal cellHeight = (rect.height() - vSpacing * (rowCount - 1)) / rowCount;
+    qreal vOffset = clientRect.top();
+    qreal cellWidth = (clientRect.width() - hSpacing * (mColCount - 1)) / mColCount;
+    qreal cellHeight = (clientRect.height() - vSpacing * (rowCount - 1)) / rowCount;
 
     // Begin painting
     QPainter painter;
     painter.begin(device);
 
+    // Draw the border
+    if (border) {
+        painter.setPen(QPen(Qt::black, border, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
+        painter.drawRect(borderRect);
+    }
+
     // Draw the header (if applicable)
     if (hasHeader) {
         fitText(
             painter,
-            QRectF(rect.left(), rect.top(), rect.width(), cellHeight),
+            QRectF(
+                clientRect.left(),
+                clientRect.top(),
+                clientRect.width(),
+                cellHeight
+            ),
             headerText
         );
         vOffset += cellHeight;
@@ -93,8 +113,8 @@ void Sheet::draw(QPaintDevice *device, const QRectF &rect)
             fitText(
                 painter,
                 QRectF(
-                    rect.left() + j * (cellWidth + hSpacing),
-                    rect.top() + i * (cellHeight + vSpacing) + vOffset,
+                    clientRect.left() + j * (cellWidth + hSpacing),
+                    clientRect.top() + i * (cellHeight + vSpacing) + vOffset,
                     cellWidth,
                     cellHeight
                 ),
@@ -107,7 +127,12 @@ void Sheet::draw(QPaintDevice *device, const QRectF &rect)
     if (hasFooter) {
         fitText(
             painter,
-            QRectF(rect.left(), rect.bottom() - cellHeight, rect.width(), cellHeight),
+            QRectF(
+                clientRect.left(),
+                clientRect.bottom() - cellHeight,
+                clientRect.width(),
+                cellHeight
+            ),
             footerText
         );
     }

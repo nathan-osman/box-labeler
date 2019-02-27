@@ -58,6 +58,9 @@ public:
     int hSpacing;
     int vSpacing;
 
+    int border;
+    int margin;
+
     Cell &cell(int row, int col);
     void setRows(int rows);
     void setCols(int cols);
