@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <QMargins>
+#include <QMarginsF>
 #include <QPen>
 
 #include "sheet.h"
@@ -69,9 +69,14 @@ void Sheet::draw(QPaintDevice *device, const QRectF &rect)
         return;
     }
 
-    // Calculate the border and client rect
-    QRectF borderRect = rect - QMargins(border / 2, border / 2, border / 2, border / 2);
-    QRectF clientRect = rect - QMargins(margin, margin, margin, margin);
+    // Calculate the number of pixels in a point for the device
+    qreal pointInPixels = static_cast<qreal>(device->physicalDpiX()) / 72;
+
+    // Determine the value for margin
+    qreal marginScaled = pointInPixels * margin;
+
+    // Determine the client area (page rect - margin)
+    QRectF clientRect = rect - QMarginsF(marginScaled, marginScaled, marginScaled, marginScaled);
 
     // Calculate the number of rows being drawn
     int rowCount = mCells.count() + (hasHeader ? 1 : 0) + (hasFooter ? 1 : 0);
@@ -84,10 +89,18 @@ void Sheet::draw(QPaintDevice *device, const QRectF &rect)
     // Begin painting
     QPainter painter;
     painter.begin(device);
+    painter.setRenderHint(QPainter::Antialiasing);
 
     // Draw the border
     if (border) {
-        painter.setPen(QPen(Qt::black, border, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
+
+        // Determine the width of the border and calculate the rect for drawing it
+        qreal borderScaled = pointInPixels * border;
+        qreal borderOffset = borderScaled / 2;
+        QRectF borderRect = rect - QMarginsF(borderOffset, borderOffset, borderOffset, borderOffset);
+
+        // Set the pen and draw the border rect
+        painter.setPen(QPen(Qt::black, borderScaled, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
         painter.drawRect(borderRect);
     }
 
