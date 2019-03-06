@@ -38,7 +38,7 @@ const int DefaultHSpacing = 20;
 const int DefaultVSpacing = 0;
 
 const int DefaultBorder = 4;
-const int DefaultMargin = 0;
+const int DefaultMargin = 8;
 
 SheetWidget::SheetWidget()
     : mHeaderEdit(new QLineEdit),
