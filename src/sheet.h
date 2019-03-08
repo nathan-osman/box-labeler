@@ -29,6 +29,7 @@
 #include <QPaintDevice>
 #include <QPainter>
 #include <QRectF>
+#include <QSize>
 #include <QString>
 #include <QVector>
 
@@ -65,7 +66,7 @@ public:
     void setRows(int rows);
     void setCols(int cols);
 
-    void draw(QPaintDevice *device, const QRectF &rect);
+    void draw(QPaintDevice *device, const QSize &size);
 
 private:
 

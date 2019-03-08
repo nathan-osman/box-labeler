@@ -39,7 +39,6 @@ void PrintTask::print()
     // Find the printer and initialize it
     QPrinter printer(QPrinterInfo::printerInfo(mPrinterName), QPrinter::HighResolution);
     printer.setDocName(tr("Box Labeler"));
-    printer.setFullPage(true);
     printer.setPageSize(QPageSize(QPageSize::Letter));
 
     // Adjust for landscape if necessary
@@ -48,7 +47,8 @@ void PrintTask::print()
     }
 
     // Draw the page
-    mSheet.draw(&printer, printer.pageRect());
+    auto r = printer.pageRect(QPrinter::Point);
+    mSheet.draw(&printer, r.size().toSize());
 
     // Signal completion
     emit finished();

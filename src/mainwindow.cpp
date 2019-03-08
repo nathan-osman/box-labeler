@@ -75,7 +75,7 @@ MainWindow::MainWindow()
         pixmap.fill();
 
         // Draw the contents and display it
-        mSheetWidget->sheet().draw(&pixmap, pageRect);
+        mSheetWidget->sheet().draw(&pixmap, pageRect.size());
         graphicsPixmapItem->setPixmap(pixmap);
         graphicsScene->setSceneRect(pageRect);
     });

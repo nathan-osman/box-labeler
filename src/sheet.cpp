@@ -59,7 +59,7 @@ void Sheet::setCols(int cols)
     mColCount = cols;
 }
 
-void Sheet::draw(QPaintDevice *device, const QRectF &rect)
+void Sheet::draw(QPaintDevice *device, const QSize &size)
 {
     bool hasHeader = !headerText.isEmpty();
     bool hasFooter = !footerText.isEmpty();
@@ -69,42 +69,31 @@ void Sheet::draw(QPaintDevice *device, const QRectF &rect)
         return;
     }
 
-    // Calculate the number of pixels in a point for the device
-    qreal pointInPixels = static_cast<qreal>(device->physicalDpiX()) / 72;
+    // Begin painting
+    QPainter painter;
+    painter.begin(device);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setWindow(0, 0, size.width(), size.height());
+    painter.setViewport(0, 0, device->width(), device->height());
 
-    // Determine the value for margin
-    qreal marginScaled = pointInPixels * margin;
+    // Draw the border
+    if (border) {
+        auto halfBorder = border / 2;
+        painter.setPen(QPen(Qt::black, border, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
+        painter.drawRect(halfBorder, halfBorder, size.width() - border, size.height() - border);
+    }
 
-    // Determine the client area (page rect - margin)
-    QRectF clientRect = rect - QMarginsF(marginScaled, marginScaled, marginScaled, marginScaled);
+    // Create a rect for the client area
+    QRectF clientRect(margin, margin, size.width() - margin * 2, size.height() - margin * 2);
 
     // Calculate the number of rows being drawn
     int rowCount = mCells.count() + (hasHeader ? 1 : 0) + (hasFooter ? 1 : 0);
 
     // Calculate the cell width and height, taking spacing into account
-    qreal vOffset = clientRect.top();
+    qreal vOffset = 0;
     qreal cellWidth = (clientRect.width() - hSpacing * (mColCount - 1)) / mColCount;
     qreal cellHeight = (clientRect.height() - vSpacing * (rowCount - 1)) / rowCount;
 
-    // Begin painting
-    QPainter painter;
-    painter.begin(device);
-    painter.setRenderHint(QPainter::Antialiasing);
-
-    // Draw the border
-    if (border) {
-
-        // Determine the width of the border and calculate the rect for drawing it
-        qreal borderScaled = pointInPixels * border;
-        qreal borderOffset = borderScaled / 2;
-        QRectF borderRect = rect - QMarginsF(borderOffset, borderOffset, borderOffset, borderOffset);
-
-        // Set the pen and draw the border rect
-        painter.setPen(QPen(Qt::black, borderScaled, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
-        painter.drawRect(borderRect);
-    }
-
-    // Draw the header (if applicable)
     if (hasHeader) {
         fitText(
             painter,
@@ -116,7 +105,7 @@ void Sheet::draw(QPaintDevice *device, const QRectF &rect)
             ),
             headerText
         );
-        vOffset += cellHeight;
+        vOffset = cellHeight + vSpacing;
     }
 
     // Draw each cell
