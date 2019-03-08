@@ -94,6 +94,7 @@ void Sheet::draw(QPaintDevice *device, const QSize &size)
     qreal cellWidth = (clientRect.width() - hSpacing * (mColCount - 1)) / mColCount;
     qreal cellHeight = (clientRect.height() - vSpacing * (rowCount - 1)) / rowCount;
 
+    // Draw the header if applicable
     if (hasHeader) {
         fitText(
             painter,
