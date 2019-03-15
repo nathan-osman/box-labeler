@@ -62,6 +62,8 @@ public:
     int border;
     int margin;
 
+    int copies;
+
     Cell &cell(int row, int col);
     void setRows(int rows);
     void setCols(int cols);

@@ -41,6 +41,9 @@ void PrintTask::print()
     printer.setDocName(tr("Box Labeler"));
     printer.setPageSize(QPageSize(QPageSize::Letter));
 
+    // Set copies
+    printer.setNumCopies(mSheet.copies);
+
     // Adjust for landscape if necessary
     if (mSheet.orientation == Sheet::Landscape) {
         printer.setOrientation(QPrinter::Landscape);

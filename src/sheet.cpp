@@ -33,6 +33,7 @@ Sheet::Sheet()
       vSpacing(0),
       border(0),
       margin(0),
+      copies(1),
       mColCount(0)
 {
     font.setBold(true);

@@ -70,6 +70,8 @@ private:
 
     QSpinBox *mBorderSpinBox;
     QSpinBox *mMarginSpinBox;
+
+    QSpinBox *mCopiesSpinBox;
 };
 
 #endif // SHEETWIDGET_H

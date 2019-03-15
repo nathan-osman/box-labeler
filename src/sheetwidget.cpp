@@ -49,7 +49,8 @@ SheetWidget::SheetWidget()
       mVSpacingSpinBox(new QSpinBox),
       mComboBox(new QComboBox),
       mBorderSpinBox(new QSpinBox),
-      mMarginSpinBox(new QSpinBox)
+      mMarginSpinBox(new QSpinBox),
+      mCopiesSpinBox(new QSpinBox)
 {
     connect(mHeaderEdit, &QLineEdit::textChanged, [this](const QString &text) {
         mSheet.headerText = text;
@@ -111,6 +112,11 @@ SheetWidget::SheetWidget()
         emit changed();
     });
 
+    // Same for copies
+    connect(mCopiesSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this](int val) {
+        mSheet.copies = val;
+    });
+
     // Add everything to the layout
     QGridLayout *gridLayout = new QGridLayout;
     gridLayout->setMargin(0);
@@ -134,6 +140,8 @@ SheetWidget::SheetWidget()
     gridLayout->addWidget(mBorderSpinBox, 13, 0, 1, 1);
     gridLayout->addWidget(new QLabel(tr("Margin:")), 12, 1, 1, 1);
     gridLayout->addWidget(mMarginSpinBox, 13, 1, 1, 1);
+    gridLayout->addWidget(new QLabel(tr("Copies:")), 14, 0, 1, 1);
+    gridLayout->addWidget(mCopiesSpinBox, 15, 0, 1, 1);
     setLayout(gridLayout);
 
     // Reset everything
@@ -163,4 +171,6 @@ void SheetWidget::clear()
 
     mBorderSpinBox->setValue(DefaultBorder);
     mMarginSpinBox->setValue(DefaultMargin);
+
+    mCopiesSpinBox->setValue(1);
 }
